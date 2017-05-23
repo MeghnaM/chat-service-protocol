@@ -1,0 +1,5 @@
+TO DO:
+
+1. Create a class that handles the establishment of a connection to the server, and spawns 3 threads - one for each connection (control, admin and data)
+2. Create a class that receives protocol commands, parses them, and calls the functions associated with these commands. 
+3. Create a class that receives commands over the control channel, parses them and sends information over the data channel.  
