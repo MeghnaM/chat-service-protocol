@@ -2,7 +2,7 @@ TO DO:
 
 IMPORTANT: Read the ENTIRE protocol description paper and get a good understanding of how the DFA and Protocol Commands work.
 
-1. Create a class that handles the establishment of a connection to the server, and spawns 3 threads - one for each connection (control, admin and data). A user will start with only two connections, and a third one will be opened once a user becomes and admin. 
+1. Create a class that handles the establishment of a connection to the server, and spawns 3 threads - one for each connection (control, admin and data). A user will start with only two connections, and a third one will be opened once a user becomes an admin. 
 2. Create a class that receives protocol commands, parses them, and calls the functions associated with these commands. Think carefully about how you will define the structure of this class, and how you willl represent the server and client commands, because we will need to access them frequently. I will suggest that you start with an example - 3 server commands, and 3 client commands - and if this structure works, then add more. 
 3. Create a class that receives commands over the control channel, parses them and sends information over the data channel. Once this is working, do the same for the admin channel. 
 
