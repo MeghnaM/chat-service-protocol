@@ -7,5 +7,5 @@ host = "127.0.0.1"          # IP address of my local network
 port = 12345                # Reserve a port for your service.
 
 s.connect((host, port))
-print s.recv(1024)
+print(s.recv(1024))
 s.close                     # Close the socket when done
