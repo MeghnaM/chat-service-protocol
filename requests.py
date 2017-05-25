@@ -50,7 +50,7 @@ def keepAliveAction():
     pass
 
 
-dict_reqs = {
+reqs_dict = {
     "REDY": readyAction(),
     "NICK": nickAction(),
     "JOIN": joinAction(),
