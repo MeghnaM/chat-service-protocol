@@ -50,8 +50,8 @@ resp_dict = {
 
     # negative responses - starting with 2
     "200": authenticationFailedAction(),
-    "210": receiveNegativeAcknowledgementAction(),
-    "220": serverDoesNotAcknowledgeAction(),
+    "210": serverDoesNotAcknowledgeAction(),
+    "220": receiveNegativeAcknowledgementAction(),
 
     # error codes
     "300": receiveGeneralErrorCodeAction(),
