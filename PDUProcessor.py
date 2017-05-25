@@ -3,8 +3,23 @@ import PDUResponse
 from test import test_unicode_identifiers
 from bitstring import BitArray
 
+
+
+
 print("test HEllo")
 
+
+#switch statement taken from https://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python#comment39185309_60215
+
+
+class switch(object):
+    value = None
+    def __new__(class_, value):
+        class_.value = value
+        return True
+
+def case(*args):
+    return any((arg == switch.value for arg in args))
 
 
 
