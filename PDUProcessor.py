@@ -1,5 +1,5 @@
-import PDURequest
-import PDUResponse
+import PDURequest as req 
+import PDUResponse as rep
 from test import test_unicode_identifiers
 from bitstring import BitArray
 
@@ -186,8 +186,9 @@ class PDUStateMachine:
        
 test1 = PDUStateMachine()
 
-PDUREQ = PDURequest()
+pduRequestObject = req.PDURequest
 
-test1.parseRequestPDUS(PDUREQ)
+
+test1.parseRequestPDUS(pduRequestObject)
 
 
