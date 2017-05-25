@@ -38,6 +38,7 @@ def recieveSyntaxErrorAction():
     pass
 
 resp_dict = {
+
     # positive responses - starting with 1
     "100": acknowledgeConnectionAction(),
     "110": authenticationSuccessfulAction(),
@@ -52,7 +53,7 @@ resp_dict = {
     "210": receiveNegativeAcknowledgementAction(),
     "220": serverDoesNotAcknowledgeAction(),
 
-    #
+    # error codes
     "300": receiveGeneralErrorCodeAction(),
     "310": receiveUnknownCommandErrorAction(),
     "320": recieveSyntaxErrorAction()
