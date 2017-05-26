@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 import socket
 
 class Client:
@@ -16,11 +15,6 @@ class Client:
       print(socket.recv(1024))
 
    def closeConnection(self):
+      socket = Client.socket
       socket.close                     # Close the socket when done
       print "The connection to port", self.port, "has been closed"
-
-if __name__ == '__main__':
-   port = 111
-   cl = Client(port)
-   cl.connect()
-   cl.closeConnection()
