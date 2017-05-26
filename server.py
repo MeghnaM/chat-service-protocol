@@ -21,6 +21,6 @@ class Server:
          connObj.close()
 
 if __name__ == '__main__':
-   port = 11112
+   port = 11111
    server = Server(port)               # Start a server which listens on the given port
    server.connect()
