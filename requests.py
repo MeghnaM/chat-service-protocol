@@ -1,8 +1,16 @@
+
+
+#readyAction sends a REDY PDU to the server
+
 def readyAction():
     pass
 
+#nickAction sends a NICK PDU to the server
+
 def nickAction():
     pass
+
+#joinAction sends a JOIN PDU to the server
 
 def joinAction():
     pass
@@ -69,3 +77,6 @@ reqs_dict = {
     "QUIT": quitAction(),
     "KEEP": keepAliveAction()
 }
+
+#def parsePDUs(self, PDU):
+#    reqs_dict(PDU)

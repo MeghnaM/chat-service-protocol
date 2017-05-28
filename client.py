@@ -15,4 +15,4 @@ class Client:
 
    def closeConnection(self):
       self.socket.close                # Close the socket when done
-      print "The connection to port", self.port, "has been closed"
+      print ("The connection to port", self.port, "has been closed")
