@@ -13,3 +13,15 @@ while True:
    print ("Got connection from", addr)
    c.send('Thank you for connecting')
    c.close()                # Close the connection
+   
+
+
+#client receive functions
+
+client_user = user()
+chat_rooms = []
+
+
+def joinclient(PDUData):
+    chat_rooms.append(PDUData.channel_identifier)
+    
