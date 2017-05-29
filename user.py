@@ -6,3 +6,5 @@ class user:
         password
         channels_attending
         mail = []
+        
+        
