@@ -21,7 +21,22 @@ while True:
 client_user = user()
 chat_rooms = []
 
+def updateChatWindow():
+    for ch in chat_rooms:
+        for txt in ch:
+            print(txt.chat_contents)
+    
+
 
 def joinclient(PDUData):
     chat_rooms.append(PDUData.channel_identifier)
+    client_user.channels_attending.append(PDU.channel_identifier)
+    
+def partclient(PDUData):
+    chat_rooms.remove(PDUData.channel_identifier)
+    client_user.channels_attending.remove()
+    
+
+    
+
     
