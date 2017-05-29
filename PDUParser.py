@@ -2,8 +2,8 @@ import PDURequest as req
 import PDUResponse as rep
 from test import test_unicode_identifiers
 from bitstring import BitArray
-import requests
-import responses
+import request_handler
+import response_handler
 
 
 
