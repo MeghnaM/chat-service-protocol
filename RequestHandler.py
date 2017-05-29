@@ -1,4 +1,4 @@
-PDUDataclass RequestHandler:
+class RequestHandler:
 
     def __init__(self):
         self.reqs_dict = {
