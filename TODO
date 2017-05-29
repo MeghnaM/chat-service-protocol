@@ -9,4 +9,31 @@ IMPORTANT: Read the ENTIRE protocol description paper and get a good understandi
 Open Questions:
 
 1. How are we going to organize the groups? - public and private
-2. How are we going to establish the authentication of a user trying to connect to a group? 
+2. How are we going to establish the authentication of a user trying to connect to a group?
+
+
+5.29.2017
+States of the DFA:
+
+1. Idle:
+- Server is running but no users are connected
+
+2. User Authenticated: Jeshur
+- A file on the system maintains a key-value list of users who have been added to the system
+- Server checks against that file to determine which users have been authenticated
+
+3. User is waiting for a response from the server:
+- User sends request to join a private chat
+- Then user waits for chat admin to respond 
+
+4. User joins a chat: Shivam
+- User can see a list of options that they will be able to choose from
+- User should be able to create a group chat 
+
+5. User is elevated to admin status:
+- Current chat admin elevates a user to admin status
+
+To do if we have time:
+1. Get separate channels set up on the client and server - one for control, one for data and one for admin
+2. Enryption
+3. Use a database to store client info instead of a file

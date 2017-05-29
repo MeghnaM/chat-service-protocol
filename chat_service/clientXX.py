@@ -1,10 +1,8 @@
 import asynchat
 import asyncore
 import socket
-import threading
-import sys
 
-class ChatClientA(asynchat.async_chat):
+class ChatClientB(asynchat.async_chat):
 
     def __init__(self, host, port):
         asynchat.async_chat.__init__(self)
@@ -18,23 +16,19 @@ class ChatClientA(asynchat.async_chat):
 
     def found_terminator(self):
         msg = ''.join(self.buffer)
-        print 'Client A received:', msg
+        print 'Client B received:', msg
         self.buffer = []
 
     def handle_close(self):
-        self.close()
-        print "Client A's connection has been terminated"
-        #comm.daemon = False
+       self.close()
+       print "Client B's connection has been terminated"
+       return
 
-client = ChatClientA('localhost', 12345)
+client = ChatClientB('localhost', 12345)
 
-comm = threading.Thread(target=asyncore.loop)
-comm.daemon = True
-comm.start()
+print 'Listening on localhost:12345'
+asyncore.loop()
 
-while True:
-    msg = raw_input('ClientA: ')
-    client.push(msg + '\n')
-    if msg == "logout":
-      client.handle_close()
-      break
+#while True:
+#   msg = raw_input('ClientB: ')
+#   client.push(msg + '\n')
