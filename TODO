@@ -15,6 +15,8 @@ Open Questions:
 5.29.2017
 States of the DFA:
 
+- Specify which states are client or server states
+
 1. Idle:
 - Server is running but no users are connected
 
@@ -41,4 +43,10 @@ To do if we have time:
 Ask Sergey:
 1. Is our implementation of the DFA enough?
 2. We are using TCP/IP for socket connections (explain line in paper specification)
-3. Explain extra credit
+3. Explain extra credit - routing protocol
+
+- DFA should show flow of information better
+- Illegal user can be a "subset" of the authenticated state - show networking conversation 
+- Write in extensibility - that there can be more users (allocate a couple bits for a "user type")
+- Specify PDUs more
+- First byte of every message header should be the protocol version 
