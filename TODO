@@ -37,3 +37,8 @@ To do if we have time:
 1. Get separate channels set up on the client and server - one for control, one for data and one for admin
 2. Enryption
 3. Use a database to store client info instead of a file
+
+Ask Sergey:
+1. Is our implementation of the DFA enough?
+2. We are using TCP/IP for socket connections (explain line in paper specification)
+3. Explain extra credit
