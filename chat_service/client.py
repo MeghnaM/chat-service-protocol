@@ -61,7 +61,6 @@ while True:
     filename = os.path.basename(__file__)
     msg = "(" + filename + ")" + msg
     client.sendPDURequest("MSSG", [], "DC", msg)
-    # client.push(msg + "\n")
 
     if msg == "logout":
         client.handle_close()

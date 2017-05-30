@@ -42,11 +42,15 @@ class ChatHandler(asynchat.async_chat):
 
 
 class ChatServer(asyncore.dispatcher):
-    def __init__(self, host, port):
+    __host = "127.0.0.1"
+    __port = 12345
+
+    def __init__(self):
         asyncore.dispatcher.__init__(self, map=chat_room)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.bind((host, port))
+        self.bind((ChatServer.__host, ChatServer.__port))
         self.listen(5)
+        print 'Server listening on ', ChatServer.__host, ':', ChatServer.__port
 
     def handle_accept(self):
         pair = self.accept()
@@ -73,6 +77,11 @@ class ChatServer(asyncore.dispatcher):
             control = "DC"
             payload = req_obj["payload"]
 
+        else:
+            params = []
+            control = "DC"
+            payload = ""
+
         return self.createResponse(resp_code, params, control, payload)
 
     def createResponse(self, resp_code, params, control, payload):
@@ -80,7 +89,5 @@ class ChatServer(asyncore.dispatcher):
         str_resp = json.dumps(resp_obj.__dict__)     # serializing
         return str_resp
 
-server = ChatServer('localhost', 12345)
-
-print 'Serving on localhost:12345'
+server = ChatServer()
 asyncore.loop(map=chat_room)

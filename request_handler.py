@@ -23,7 +23,7 @@ class RequestHandler:
 
     # readyAction sends a REDY PDU to the server
     def readyAction(self):
-        print("Ready called")
+        print "Ready called"
         return "100"
 
     # nickAction sends a NICK PDU to the server
