@@ -19,7 +19,7 @@ class ChatHandler(asynchat.async_chat):
     def collect_incoming_data(self, data):
         self.buffer.append(data)
 
-    def found_terminator(self):
+    def found_terminator(self):     # for broadcasting
         msg = ''.join(self.buffer)
         req_obj = json.loads(msg)
         response = self.server_obj.processRequest(req_obj)
@@ -40,10 +40,16 @@ class ChatHandler(asynchat.async_chat):
         print "Server session has been terminated"
         sys.exit(0)
 
+    # def handle_read(self):
+    #     req_obj = json.loads(self.recv(1024))
+    #     response = self.server_obj.processRequest(req_obj) + "\n"
+    #     self.push(response)
+
 
 class ChatServer(asyncore.dispatcher):
     __host = "127.0.0.1"
     __port = 12345
+    __filename = "./user_accounts.txt"
 
     def __init__(self):
         asyncore.dispatcher.__init__(self, map=chat_room)
@@ -51,6 +57,9 @@ class ChatServer(asyncore.dispatcher):
         self.bind((ChatServer.__host, ChatServer.__port))
         self.listen(5)
         print 'Server listening on ', ChatServer.__host, ':', ChatServer.__port
+
+    def getFileName(self):
+        return self.__filename
 
     def handle_accept(self):
         pair = self.accept()
@@ -63,8 +72,13 @@ class ChatServer(asyncore.dispatcher):
         command = req_obj["command"]
 
         # TODO: Validate command i.e. check if command exists and if command is valid for current state
+        obj = {}
+        if command == "AUTH" or command == "NWUA":
+            obj["username"] = req_obj["parameters"]["username"]
+            obj["password"] = req_obj["parameters"]["passwords"]
+            obj["filename"] = self.__filename
 
-        reqh_obj = reqh.RequestHandler()
+        reqh_obj = reqh.RequestHandler(self, obj)
         resp_code = reqh_obj.reqs_dict[command]
 
         if resp_code == "100":
@@ -72,7 +86,7 @@ class ChatServer(asyncore.dispatcher):
             control = "CC"
             payload = "Ready!"
 
-        elif resp_code ==  "140":
+        elif resp_code == "140":
             params = []
             control = "DC"
             payload = req_obj["payload"]
