@@ -42,3 +42,4 @@ Ask Sergey:
 1. Is our implementation of the DFA enough?
 2. We are using TCP/IP for socket connections (explain line in paper specification)
 3. Explain extra credit
+4. Is using asynchat fine?
