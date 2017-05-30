@@ -23,8 +23,9 @@ while True:
    pduData.c = c
    
    #in data should be a PDURequest object
+   #parses and executes a PDU action
    if in_data != "":     
-       parser.parseRequestPDU(in_data, pduData, c)
+       parser.parseRequestPDU(in_data, pduData)
 
     
    
@@ -40,62 +41,118 @@ user_profiles =  []
 
 #data structure implementation
 
-def joinchat(PDUData):
+def joinchat(pduData):
     
     chatrooms[PDUData.channel_identifier].users.append(user.nickname)
     user_profiles[PDUData.nickname].channels_attending.append(PDUData.channel_identifier)
+    
+    #build a PDU to send back
+    
+    responsePDU = PDUResponse()
+    
+    #self.version = PDUResponse.__version
+    #self.response_code = code
+    #self.parameters = parameters
+    #    self.channel = channel
+     #   self.payload = payload
+    
+    #PUT A VERSION CONSTANT SOMEWHERE
+    responsePDU.version = 2
+    #send `150 - generic positive acknowledgment
+    responsePDU.response_code = 150
+    pduData.c.sendall(responsePDU)
     #return PDU acknowledgement code 150 - positive acknowledgement
     
-def partchat(PDUData):
+def partchat(pduData):
     chatrooms[PDUData.channel_identifier].users.remove(user.nickname)
     user_profiles[PDUData.nickname].attending.remove(PDUData.channel_identiftier)
     #return PDU acknowledgment code 150 positive acknowledgement
+    #build a PDU to send back
     
-def messagechat(PDUData):
+    responsePDU = PDUResponse()
+    
+    #self.version = PDUResponse.__version
+    #self.response_code = code
+    #self.parameters = parameters
+    #    self.channel = channel
+     #   self.payload = payload
+    
+    #PUT A VERSION CONSTANT SOMEWHERE
+    responsePDU.version = 2
+    #send `150 - generic positive acknowledgment
+    responsePDU.response_code = 150
+    pduData.c.sendall(responsePDU)
+    #return PDU acknowledgement code 150 - positive acknowledgement
+    
+    
+def messagechat(pduData):
     #broadcast message to all chatroom clients
     #foreach user in the chatroom class
     #return the message PDU to their client
     chatrooms[PDUData.channel_identifier].contents.append(PDUData.payload)
     for u in chatrooms[PDUData.channel_identifier].users:
-        #send a message to the client to refresh
+        #build a PDU to send back
+    
+        responsePDU = PDUResponse()
+        responsePDU.version = 2
+        responsePDU.response_code = 120
+        #nick, channel, and ascii text
+        responsePDU.parameters = pduData.parameters
+        responsePDU.channel = PDUData.channel_identifier
+        responsePDU.payload = pduData.payload
         
+        #how do we send all to multiple users in a group chat
+        pduData.c.sendall(responsePDU)
+        #self.version = PDUResponse.__version
+    #self.response_code = code
+    #self.parameters = parameters
+    #    self.channel = channel
+     #   self.payload = payload
+    
+    #PUT A VERSION CONSTANT SOMEWHERE
+    responsePDU.version = 2
+    #send `150 - generic positive acknowledgment
+    responsePDU.response_code = 150
+    pduData.c.sendall(responsePDU)
+    #return PDU acknowledgement code 150 - positive acknowledgement
+            
         #return 120 to client, nick, chatname, and ascii text
-        pass
+        
 
-def elevatechat(PDUData):
+def elevatechat(pduData):
     
     #elevate user in chatroom
     chatrooms[PDUData.channel_identifier].elevated_users(user.nickname)
     
-def quitchat(PDUData):
+def quitchat(pduData):
     #disconnect from client
     pass
     
-def dropchat(PDUData):
+def dropchat(pduData):
     #drop user privelages in chat
     chatrooms[PUData.channel_identifier].elevated_users.remove(user.nickname)
     
-def mailchat(PDUData):
+def mailchat(pduData):
     pass
     #return queued  mail to client
     #return code 140 and ASCII text
 
-def kickchat(PDUData):
+def kickchat(pduData):
     
     #server removces a user from a chatname
     chatroooms[PDUData.channel_identifier].users.remove(user.nickname)
 
-def banchat(PDUData):
+def banchat(pduData):
     #server kicks the user and bans them temporarily
     chatrooms[PDUData.channel_identifier].users.remove(user.nickname)
     chatrooms[PDUData.channel_identifier].banned_users.append(user.nickname)
     
-def blackchat(PDUData):
+def blackchat(pduData):
     #server blacklists user
     chatroooms[PDUData.channel_identifier].users.remove(user.nickname)
     chatrooms[PDUData.channel_identifier].black_users.append(user.nickname)
     
-def privatechat(PDUData):
+def privatechat(pduData):
     pass
 
     

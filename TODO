@@ -10,7 +10,8 @@ Open Questions:
 
 1. How are we going to organize the groups? - public and private
 2. How are we going to establish the authentication of a user trying to connect to a group?
-3. How are we going to have multiple chatrooms with a command line interface
+3. How are we going to have multiple chatrooms with a command line interface?
+4. How do we broadcast a message to all the clients connected to the server?
 
 5.29.2017
 States of the DFA:
