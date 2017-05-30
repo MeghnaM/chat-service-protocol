@@ -12,7 +12,19 @@ while True:
    c, addr = s.accept()     # Establish connection with client.
    print ("Got connection from", addr)
    c.send('Thank you for connecting')
-   c.close()                # Close the connection
+   #c.close()                # Close the connection
+   #create receive buffer
+   receive_buffer = string()
+   #process any data received
+   #pass off as PDU to PDUProcessor
+   in_data = c.recv(receive_buffer)
+   pduData = PDUData()
+   pduData.c = c   
+   
+   #in data should be a PDUResponse object
+   if in_data != "":     
+       parser.parseResponsePDU(in_data, pduData, c)
+    
    
 
 
