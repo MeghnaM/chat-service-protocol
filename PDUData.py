@@ -3,7 +3,7 @@
 
 
 class PDUData:
-    
+    c = socket()
     def __init__(self):
     
      self.nick = ""  #nickname of user
