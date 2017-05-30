@@ -2,34 +2,44 @@ import asynchat
 import asyncore
 import socket
 import sys
+import json
+import request_handler as reqh
+import PDUResponse
 
 chat_room = {}
 
+
 class ChatHandler(asynchat.async_chat):
-    def __init__(self, sock):
+    def __init__(self, sock, server_obj):
         asynchat.async_chat.__init__(self, sock=sock, map=chat_room)
         self.set_terminator('\n')
         self.buffer = []
+        self.server_obj = server_obj
 
     def collect_incoming_data(self, data):
         self.buffer.append(data)
 
     def found_terminator(self):
         msg = ''.join(self.buffer)
-        print 'Server received:', msg
+        req_obj = json.loads(msg)
+        response = self.server_obj.processRequest(req_obj)
+        response += "\n"
+
         for handler in chat_room.itervalues():
             if hasattr(handler, 'push'):
-                handler.push(msg + '\n')
+                handler.push(response)
+
         self.buffer = []
         # TODO: Update close condition - only when *all* the clients have logged out,
         #       should the server connection be terminated
         if msg == "logout":
-           self.handle_close()
+            self.handle_close()
 
     def handle_close(self):
-       self.close()
-       print "Server session has been terminated"
-       sys.exit(0)
+        self.close()
+        print "Server session has been terminated"
+        sys.exit(0)
+
 
 class ChatServer(asyncore.dispatcher):
     def __init__(self, host, port):
@@ -43,7 +53,32 @@ class ChatServer(asyncore.dispatcher):
         if pair is not None:
             sock, addr = pair
             print 'Incoming connection from %s' % repr(addr)
-            handler = ChatHandler(sock)
+            handler = ChatHandler(sock, self)
+
+    def processRequest(self, req_obj):
+        command = req_obj["command"]
+
+        # TODO: Validate command i.e. check if command exists and if command is valid for current state
+
+        reqh_obj = reqh.RequestHandler()
+        resp_code = reqh_obj.reqs_dict[command]
+
+        if resp_code == "100":
+            params = []
+            control = "CC"
+            payload = "Ready!"
+
+        elif resp_code ==  "140":
+            params = []
+            control = "DC"
+            payload = req_obj["payload"]
+
+        return self.createResponse(resp_code, params, control, payload)
+
+    def createResponse(self, resp_code, params, control, payload):
+        resp_obj = PDUResponse.PDUResponse(resp_code, params, control, payload)
+        str_resp = json.dumps(resp_obj.__dict__)     # serializing
+        return str_resp
 
 server = ChatServer('localhost', 12345)
 

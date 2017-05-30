@@ -2,23 +2,23 @@ class RequestHandler:
 
     def __init__(self):
         self.reqs_dict = {
-            "REDY": self.readyAction(PDUData),
-            "NICK": self.nickAction(PDUData),
-            "JOIN": self.joinAction(PDUData),
-            "PART": self.partAction(PDUData),
-            "MSSG": self.mssgAction(PDUData),
-            "KICK": self.kickAction(PDUData),
-            "BANK": self.banAction(PDUData),
-            "BLAK": self.blackAction(PDUData),
-            "ELVT": self.elevateAction(PDUData),
-            "DROP": self.dropAction(PDUData),
-            "LIST": self.listAction(PDUData),
-            "PMSG": self.privateMessageAction(PDUData),
-            "PRVM": self.endPrivateMessageAction(PDUData),
-            "PMSS": self.sendPrivateMessageAction(PDUData),
-            "MAIL": self.mailAction(PDUData),
-            "QUIT": self.quitAction(PDUData),
-            "KEEP": self.keepAliveAction(PDUData)
+            "REDY": self.readyAction(),
+            "NICK": self.nickAction(),
+            "JOIN": self.joinAction(),
+            "PART": self.partAction(),
+            "MSSG": self.mssgAction(),
+            "KICK": self.kickAction(),
+            "BANK": self.banAction(),
+            "BLAK": self.blackAction(),
+            "ELVT": self.elevateAction(),
+            "DROP": self.dropAction(),
+            "LIST": self.listAction(),
+            "PMSG": self.privateMessageAction(),
+            "PRVM": self.endPrivateMessageAction(),
+            "PMSS": self.sendPrivateMessageAction(),
+            "MAIL": self.mailAction(),
+            "QUIT": self.quitAction(),
+            "KEEP": self.keepAliveAction()
         }
 
     # readyAction sends a REDY PDU to the server
@@ -46,8 +46,8 @@ class RequestHandler:
     def mssgAction(self):
         #parameters nick, chatname, ascii text
         #server recfeives ascoo text and broadcasts across chatrooom
-        
-        pass
+        print "Message action called"
+        return "140"
 
     def kickAction(self):
         pass

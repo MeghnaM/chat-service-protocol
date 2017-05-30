@@ -1,10 +1,10 @@
 class ResponseHandler:
-
-    def __init__(self):
+    def __init__(self, obj):
+        self.pduData = obj
         self.resp_dict = {
 
             # positive responses - starting with 1
-            "100": self.acknowledgeConnectionAction(),
+            "100": self.acknowledgeConnectionAction(self.pduData),
             "110": self.authenticationSuccessfulAction(),
             "120": self.receivingMessageAction(),
             "130": self.receiveListOfChannelsAction(),
@@ -23,8 +23,8 @@ class ResponseHandler:
             "320": self.recieveSyntaxErrorAction()
         }
 
-    def acknowledgeConnectionAction(self):
-        print("Acknowledged")
+    def acknowledgeConnectionAction(self, data):
+            print self.pduData.payload
 
     def authenticationSuccessfulAction(self):
         pass

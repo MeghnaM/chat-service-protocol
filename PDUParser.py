@@ -18,7 +18,7 @@ class PDUParser:
     #dsefine a simple state machine based on PDU input
         
         
-    def parseRequestPDUS(self, pduRequest):
+    def parseRequestPDUS(self, pduRequest, pduData):
     
         #PDU data for Request
         message_identifier = BitArray(256) # 32 byte message idenfitier
@@ -43,12 +43,18 @@ class PDUParser:
         
         print("Requesting identifier: " % identifier)
         
+        #PDU Data
+        
+        req_handler = RequestHandler()
+        
+        req_handler.pduData = pduData
+        
         reqs_dict[identifier]
             
             
     
         
-    def parseResponsePDUs(self, pduResponse):
+    def parseResponsePDUs(self, pduResponse, pduData):
         #PDU data for response
         message_identifier = BitArray(96) # 12 byte message idenfitier
         message_parameters = BitArray(4096)  # 512 byte parameter space
@@ -71,15 +77,12 @@ class PDUParser:
         
         print("Requesting identifier: " % identifier)
         
-  
-        resp_dict[identifier]
         
-      
-test1 = PDUStateMachine()
-
-pduRequestObject = req.PDURequest()
-
-
-test1.parseRequestPDUS(pduRequestObject)
-
+        resp_handler = ResponseHandler()
+        
+        resp_handler.pduData = pduData
+  
+        resp_handler.resp_dict[identifier]
+        
+        
 
