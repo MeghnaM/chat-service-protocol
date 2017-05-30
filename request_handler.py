@@ -1,26 +1,24 @@
 class RequestHandler:
 
-    pduData = PDUData()
-
     def __init__(self):
         self.reqs_dict = {
-            "REDY": self.readyAction(pduData),
-            "NICK": self.nickAction(pduData),
-            "JOIN": self.joinAction(pduData),
-            "PART": self.partAction(pduData),
-            "MSSG": self.mssgAction(pduData),
-            "KICK": self.kickAction(pduData),
-            "BANK": self.banAction(pduData),
-            "BLAK": self.blackAction(pduData),
-            "ELVT": self.elevateAction(pduData),
-            "DROP": self.dropAction(pduData),
-            "LIST": self.listAction(pduData),
-            "PMSG": self.privateMessageAction(pduData),
-            "PRVM": self.endPrivateMessageAction(pduData),
-            "PMSS": self.sendPrivateMessageAction(pduData),
-            "MAIL": self.mailAction(pduData),
-            "QUIT": self.quitAction(pduData),
-            "KEEP": self.keepAliveAction(pduData)
+            "REDY": self.readyAction(),
+            "NICK": self.nickAction(),
+            "JOIN": self.joinAction(),
+            "PART": self.partAction(),
+            "MSSG": self.mssgAction(),
+            "KICK": self.kickAction(),
+            "BANK": self.banAction(),
+            "BLAK": self.blackAction(),
+            "ELVT": self.elevateAction(),
+            "DROP": self.dropAction(),
+            "LIST": self.listAction(),
+            "PMSG": self.privateMessageAction(),
+            "PRVM": self.endPrivateMessageAction(),
+            "PMSS": self.sendPrivateMessageAction(),
+            "MAIL": self.mailAction(),
+            "QUIT": self.quitAction(),
+            "KEEP": self.keepAliveAction()
         }
 
     # readyAction sends a REDY PDU to the server
@@ -37,42 +35,38 @@ class RequestHandler:
         #parameters nick and chatname
         #server adds nick to chat_room user list
         #client opens chat room window
-        joinchat(PDUData)
-        
+        pass
 
     def partAction(self):
         #parameters nick and chatname
         #server removes nick from chat_Room list
-        #client closes chatroom window
-        partchat(PDUData)
-        
+        #client closes chatroom window 
+        pass
 
     def mssgAction(self):
         #parameters nick, chatname, ascii text
         #server recfeives ascoo text and broadcasts across chatrooom
-        messagechat()
-        
+        print "Message action called"
+        return "140"
 
     def kickAction(self):
-        kickchat()
-        
+        pass
 
     def banAction(self):
-        banchat()
+        pass
 
     def blackAction(self):
-        blackchat()
+        pass
 
     def elevateAction(self):
         #parameters nick and chatname
         #server adds nick to elevated user list for the chat room object
-        elevatechat()
-        
+        pass
 
     def dropAction(self):
         #parameters nick and chatname
         #server removes nick from elevated user list for the chat room object
-        dropchat()
+        pass
 
     def listAction(self):
         #parameters nick
@@ -89,15 +83,14 @@ class RequestHandler:
         pass
 
     def mailAction(self):
-        mailchat()
         #parameters - nick
         #server responds with asciii text payload of queued messages
+        pass
 
     def quitAction(self):
         #paremte3rs nick
         #server disconnect
-        quitchat()
-        
+        pass
 
     def keepAliveAction(self):
         pass
