@@ -1,38 +1,68 @@
-#!/usr/bin/python
+import asynchat
+import asyncore
 import socket
+import threading
 import json
+import os
 import PDURequest
 import response_handler as resh
+import PDUData
 
-class Client:
-    # IP address of my local network
-    host = "127.0.0.1"
+class ChatClient(asynchat.async_chat):
+    __host = "127.0.0.1"
+    __port = 12345
 
-    def __init__(self, port):
-        self.port = port
-        self.socket = socket.socket()       # Create a new socket object
+    def __init__(self):
+        asynchat.async_chat.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.set_terminator('\n')
+        self.buffer = []
 
-    def connect(self):
-        host = Client.host
-        self.socket.connect((host, self.port))
-        self.sendPDURequest()
-        resp_obj = json.loads(self.socket.recv(1024).decode("utf-8"))       # byte-decoding and deserialization
+    def connect_to_server(self):
+        self.connect((ChatClient.__host, ChatClient.__port))
+        # self.sendPDURequest("REDY", [], "CC", "Ready?")
+
+    def sendPDURequest(self, command, parameters, channel, payload):
+        req = PDURequest.PDURequest(command, parameters, channel, payload)
+        str_send = json.dumps(req.__dict__) + "\n"      # serializing
+        self.push(str_send)
+
+    def collect_incoming_data(self, data):
+        self.buffer.append(data)
+
+    def found_terminator(self):
+        resp_str = ''.join(self.buffer)
+        self.buffer = []
+
+        resp_obj = json.loads(resp_str)         # deserialization
         self.processResponse(resp_obj)
-
-    def sendPDURequest(self):
-        req = PDURequest.PDURequest("REDY", [], "CC", "Ready?")
-        str_req_byte = bytes(json.dumps(req.__dict__), "utf-8")             # serializing and byte-encoding requestPDU
-        self.socket.send(str_req_byte)
 
     def processResponse(self, resp_obj):
         resp_code = resp_obj["response_code"]
-        resh_obj = resh.ResponseHandler()
-        dict_val = resh_obj.resp_dict[resp_code]
+        pdu_data_obj = PDUData.PDUData()
+        pdu_data_obj.payload = resp_obj["payload"]
 
-    def closeConnection(self):
-        self.socket.close()                 # Close the socket when done
-        print("The connection to port", self.port, "has been closed")
+        resh_obj = resh.ResponseHandler(pdu_data_obj)
+        resh_obj.resp_dict[resp_code]
 
-client = Client(1234)
-client.connect()
-client.closeConnection()
+    def handle_close(self):
+        self.close()
+        print "Client A's connection has been terminated"
+
+client = ChatClient()
+client.connect_to_server()
+
+comm = threading.Thread(target=asyncore.loop)
+comm.daemon = True
+comm.start()
+
+while True:
+    msg = raw_input('-> ')
+    filename = os.path.basename(__file__)
+    msg = "(" + filename + ")" + msg
+    client.sendPDURequest("MSSG", [], "DC", msg)
+    # client.push(msg + "\n")
+
+    if msg == "logout":
+        client.handle_close()
+        break

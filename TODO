@@ -16,6 +16,8 @@ Open Questions:
 5.29.2017
 States of the DFA:
 
+- Specify which states are client or server states
+
 1. Idle:
 - Server is running but no users are connected
 
