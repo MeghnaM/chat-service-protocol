@@ -41,7 +41,7 @@ class ChatClient(asynchat.async_chat):
 
         if resp_obj["response_code"] == "140":
             chat = resp_obj["payload"]
-            if self.username.__eq__(chat[1: len(self.username) + 1]):       # don't print on senders console
+            if self.username == chat[1: len(self.username) + 1]:       # don't print on senders console
                 return
             else:
                 self.processResponse(resp_obj)
@@ -78,7 +78,7 @@ class ChatClient(asynchat.async_chat):
             print "2 -> Sign up"
             user_input = raw_input("-> ")
 
-            if user_input.__eq__("1"):
+            if user_input == "1":
                 self.authentication_complete = False
                 username = raw_input("username-> ")
                 password = raw_input("password-> ")
@@ -96,7 +96,7 @@ class ChatClient(asynchat.async_chat):
                     print "Either your username or password is incorrect"
                     continue
 
-            elif user_input.__eq__("2"):
+            elif user_input == "2":
                 self.authentication_complete = False
                 username = raw_input("choose username-> ")
                 password = raw_input("choose password-> ")
