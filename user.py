@@ -6,6 +6,3 @@ class User:
         self.isAdmin = isAdmin
         self.adminGroups = adminGroups
         self.isBanned = isBanned
-        # channels_attending = []
-        # mail = deque
-        

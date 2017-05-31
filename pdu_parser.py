@@ -1,5 +1,5 @@
-import PDURequest as req 
-import PDUResponse as rep
+import pdu_request as req
+import pdu_response as rep
 from test import test_unicode_identifiers
 from bitstring import BitArray
 import request_handler

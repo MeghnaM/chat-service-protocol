@@ -4,9 +4,9 @@ import socket
 import threading
 import json
 import os
-import PDURequest
+import pdu_request
 import response_handler as resh
-import PDUData
+import pdu_data
 
 
 class ChatClient(asynchat.async_chat):
@@ -26,7 +26,7 @@ class ChatClient(asynchat.async_chat):
         self.connect((ChatClient.__host, ChatClient.__port))
 
     def sendPDURequest(self, command, parameters, channel, payload):
-        req = PDURequest.PDURequest(command, parameters, channel, payload)
+        req = pdu_request.PDURequest(command, parameters, channel, payload)
         str_send = json.dumps(req.__dict__) + "\n"                          # serialization
         self.push(str_send)
 
@@ -60,7 +60,7 @@ class ChatClient(asynchat.async_chat):
 
     def processResponse(self, resp_obj):
         resp_code = resp_obj["response_code"]
-        pdu_data_obj = PDUData.PDUData()
+        pdu_data_obj = pdu_data.PDUData()
         pdu_data_obj.payload = resp_obj["payload"]
 
         resh_obj = resh.ResponseHandler(pdu_data_obj)

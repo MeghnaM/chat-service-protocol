@@ -4,7 +4,7 @@ import socket
 import sys
 import json
 import request_handler as reqh
-import PDUResponse
+import pdu_response
 
 chat_room = {}
 
@@ -94,7 +94,7 @@ class ChatServer(asyncore.dispatcher):
         return self.createResponse(resp_code, params, control, payload)
 
     def createResponse(self, resp_code, params, control, payload):
-        resp_obj = PDUResponse.PDUResponse(resp_code, params, control, payload)
+        resp_obj = pdu_response.PDUResponse(resp_code, params, control, payload)
         str_resp = json.dumps(resp_obj.__dict__)
         return str_resp
 
