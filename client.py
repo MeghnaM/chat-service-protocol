@@ -20,6 +20,7 @@ class ChatClient(asynchat.async_chat):
         self.buffer = []
         self.obj = {}
         self.authentication_complete = False
+        self.username = ""
 
     def connect_to_server(self):
         self.connect((ChatClient.__host, ChatClient.__port))
@@ -38,7 +39,15 @@ class ChatClient(asynchat.async_chat):
 
         resp_obj = json.loads(resp_str)                                     # deserialization
 
-        if resp_obj["response_code"] == "110":
+        if resp_obj["response_code"] == "140":
+            chat = resp_obj["payload"]
+            if self.username.__eq__(chat[1: len(self.username) + 1]):       # don't print on senders console
+                return
+            else:
+                self.processResponse(resp_obj)
+                print("-> "),           # comma added to allow next print to be on the same line
+
+        elif resp_obj["response_code"] == "110":
             self.obj["authenticated"] = True
             self.authentication_complete = True
 
@@ -80,6 +89,7 @@ class ChatClient(asynchat.async_chat):
                     pass
 
                 if self.obj["authenticated"]:
+                    self.username = username
                     print("Login successful")
                     break
                 else:
@@ -97,6 +107,7 @@ class ChatClient(asynchat.async_chat):
                     pass
 
                 if self.obj["authenticated"]:
+                    self.username = username
                     print("Account created")
                     break
                 else:
@@ -119,11 +130,9 @@ client.initiateDialog()
 
 while True:
     msg = raw_input('-> ')
-
     if msg == "logout":
         client.handle_close()
         break
 
-    filename = os.path.basename(__file__)
-    msg = "(" + filename + ")" + msg
+    msg = "(" + client.username + ") " + msg
     client.sendPDURequest("MSSG", {}, "DC", msg)
