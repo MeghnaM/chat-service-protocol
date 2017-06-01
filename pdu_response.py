@@ -1,3 +1,6 @@
+import json
+
+
 class PDUResponse:
     __version = 1.0
 
@@ -7,3 +10,8 @@ class PDUResponse:
         self.parameters = parameters
         self.channel = channel
         self.payload = payload
+
+    def createResponseStr(self):
+        str_resp = json.dumps(self.__dict__)        # serialization
+        str_resp += "\n"        # termination character
+        return str_resp

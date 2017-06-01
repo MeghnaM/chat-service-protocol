@@ -4,7 +4,6 @@ import socket
 import sys
 import json
 import request_handler as reqh
-import pdu_response
 
 chat_room = {}
 
@@ -23,7 +22,6 @@ class ChatHandler(asynchat.async_chat):
         msg = ''.join(self.buffer)
         req_obj = json.loads(msg)
         response = self.server_obj.processRequest(req_obj)
-        response += "\n"
 
         for handler in chat_room.itervalues():
             if hasattr(handler, 'push'):
@@ -45,6 +43,7 @@ class ChatServer(asyncore.dispatcher):
     __host = "127.0.0.1"
     __port = 12345
     __filename = "./user_accounts.txt"
+    __list = "./list.txt"
 
     def __init__(self):
         asyncore.dispatcher.__init__(self, map=chat_room)
@@ -65,7 +64,7 @@ class ChatServer(asyncore.dispatcher):
 
     def processRequest(self, req_obj):
         command = req_obj["command"]
-
+        list = {}
         # TODO: Validate command i.e. check if command exists and if command is valid for current state
         obj = {}
         if command == "AUTH" or command == "NWUA":
@@ -73,30 +72,25 @@ class ChatServer(asyncore.dispatcher):
             obj["password"] = req_obj["parameters"]["password"]
             obj["filename"] = self.__filename
 
+        elif command == "LIST":
+            obj["username"] = req_obj["parameters"]["username"]
+            obj["list"] = self.__list
+
+        elif command == "CHAT":
+            obj["username"] = req_obj["parameters"]["username"]
+            obj["chat_name"] = req_obj["parameters"]["chat_name"]
+            obj["list"] = self.__list
+
+        elif command == "JOIN":
+            obj["username"] = req_obj["parameters"]["username"]
+            obj["chat_name"] = req_obj["parameters"]["chat_name"]
+            obj["list"] = self.__list
+
+        elif command == "MSSG":
+            obj["payload"] = req_obj["payload"]
+
         reqh_obj = reqh.RequestHandler(obj)
-        resp_code = reqh_obj.run_command(command)
-
-        if resp_code == "100":
-            params = []
-            control = "CC"
-            payload = "Ready!"
-
-        elif resp_code == "140":
-            params = []
-            control = "DC"
-            payload = req_obj["payload"]
-
-        else:
-            params = []
-            control = "DC"
-            payload = ""
-
-        return self.createResponse(resp_code, params, control, payload)
-
-    def createResponse(self, resp_code, params, control, payload):
-        resp_obj = pdu_response.PDUResponse(resp_code, params, control, payload)
-        str_resp = json.dumps(resp_obj.__dict__)
-        return str_resp
+        return reqh_obj.run_command(command)        # returns response string
 
 server = ChatServer()
 asyncore.loop(map=chat_room)

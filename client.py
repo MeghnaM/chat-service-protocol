@@ -4,8 +4,8 @@ import socket
 import threading
 import json
 import os
-import pdu_request
-import response_handler as resh
+from pdu_request import PDURequest
+from response_handler import ResponseHandler
 import pdu_data
 
 
@@ -20,14 +20,16 @@ class ChatClient(asynchat.async_chat):
         self.buffer = []
         self.obj = {}
         self.authentication_complete = False
+        self.create_group_resp_recv = False
+        self.groupNames_received = False
         self.username = ""
+        self.groupNames = []
 
     def connect_to_server(self):
         self.connect((ChatClient.__host, ChatClient.__port))
 
     def sendPDURequest(self, command, parameters, channel, payload):
-        req = pdu_request.PDURequest(command, parameters, channel, payload)
-        str_send = json.dumps(req.__dict__) + "\n"                          # serialization
+        str_send = PDURequest(command, parameters, channel, payload).createRequestStr()
         self.push(str_send)
 
     def collect_incoming_data(self, data):
@@ -39,13 +41,30 @@ class ChatClient(asynchat.async_chat):
 
         resp_obj = json.loads(resp_str)                                     # deserialization
 
-        if resp_obj["response_code"] == "140":
+        if resp_obj["response_code"] == "130":
+            if self.username == resp_obj["parameters"]["username"]:
+                self.groupNames = resp_obj["payload"]
+                self.obj["groupNames_received"] = True
+                self.groupNames_received = True
+                self.processResponse(resp_obj)
+            else:
+                return
+
+        elif resp_obj["response_code"] == "180":
+            if self.username == resp_obj["payload"]:
+                self.processResponse(resp_obj)
+            else:
+                return
+
+        elif resp_obj["response_code"] == "140":
             chat = resp_obj["payload"]
+
             if self.username == chat[1: len(self.username) + 1]:       # don't print on senders console
                 return
             else:
                 self.processResponse(resp_obj)
                 print("-> "),           # comma added to allow next print to be on the same line
+            pass
 
         elif resp_obj["response_code"] == "110":
             self.obj["authenticated"] = True
@@ -55,6 +74,14 @@ class ChatClient(asynchat.async_chat):
             self.obj["authenticated"] = False
             self.authentication_complete = True
 
+        elif resp_obj["response_code"] == "170":
+            self.obj["groupCreated"] = True
+            self.create_group_resp_recv = True
+
+        elif resp_obj["response_code"] == "230":
+            self.obj["groupCreated"] = False
+            self.create_group_resp_recv = True
+
         else:
             self.processResponse(resp_obj)
 
@@ -63,8 +90,8 @@ class ChatClient(asynchat.async_chat):
         pdu_data_obj = pdu_data.PDUData()
         pdu_data_obj.payload = resp_obj["payload"]
 
-        resh_obj = resh.ResponseHandler(pdu_data_obj)
-        resh_obj.resp_dict[resp_code]
+        resh_obj = ResponseHandler(pdu_data_obj)
+        return resh_obj.runResponseCodeAction(resp_code)
 
     def handle_close(self):
         self.close()
@@ -74,11 +101,12 @@ class ChatClient(asynchat.async_chat):
         print "Welcome to our CSP system. To continue, select one of the following"
 
         while True:
+
             print "1 -> Login"
             print "2 -> Sign up"
             user_input = raw_input("-> ")
 
-            if user_input == "1":
+            if user_input =="1":
                 self.authentication_complete = False
                 username = raw_input("username-> ")
                 password = raw_input("password-> ")
@@ -91,6 +119,7 @@ class ChatClient(asynchat.async_chat):
                 if self.obj["authenticated"]:
                     self.username = username
                     print("Login successful")
+                    self.createChatGroups(username)
                     break
                 else:
                     print "Either your username or password is incorrect"
@@ -109,6 +138,7 @@ class ChatClient(asynchat.async_chat):
                 if self.obj["authenticated"]:
                     self.username = username
                     print("Account created")
+                    self.createChatGroups(username)
                     break
                 else:
                     print "Username already exists"
@@ -116,6 +146,50 @@ class ChatClient(asynchat.async_chat):
             else:
                 print "Invalid input, try again."
                 continue
+
+    def createChatGroups(self, username):
+        while True:
+            print "1 -> Join available groups"
+            print "2 -> Create new group"
+            user_input = raw_input("-> ")
+            if user_input == "1":
+                para = {"username": username}
+                self.sendPDURequest("LIST", para, "CC", "")
+                print "Choose Group"
+                while not self.groupNames_received:  # waits for server response
+                    pass
+
+                if self.obj["groupNames_received"]:
+                    self.joinGroup(username)
+                    self.obj["groupNames_received"] = False
+                    self.groupNames_received = False
+                    break
+
+            elif user_input == "2":
+                print "Enter Group name"
+                groupName = raw_input("-> ")
+                para = {"username": username, "chat_name": groupName}
+                self.sendPDURequest("CHAT", para, "CC", "")
+
+                while not self.create_group_resp_recv:         # waits for server response
+                    pass
+
+                if self.obj["groupCreated"]:
+                    self.username = username
+                    print("Group Created")
+                    break
+                else:
+                    print "Group already exists"
+                    continue
+                break
+            else:
+                print "Invalid input"
+                continue
+
+    def joinGroup(self, username):
+        user_input = raw_input("-> ")
+        para = {"username": username, "chat_name": self.groupNames[int(user_input)-1]}
+        self.sendPDURequest("JOIN", para, "CC", "")
 
 client = ChatClient()
 client.connect_to_server()
