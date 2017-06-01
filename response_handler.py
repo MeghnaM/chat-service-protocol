@@ -60,6 +60,7 @@ class ResponseHandler:
         pass
 
     def receiveListOfChannelsAction(self):
+        print "Choose Group"
         chatList = self.pduData.payload
         for i in range(0, len(chatList)):
             print i+1, ":", chatList[i]

@@ -190,7 +190,7 @@ class RequestHandler:
         # server sends a list of chatrooms from the global chat room object
         chat_para = self.getListFile(self.obj["list"]).strip()
 
-        if chat_para:
+        if chat_para != "":
             all_users_obj = json.loads(chat_para)
             groupList = []
             for user_acc in all_users_obj["chats"]:

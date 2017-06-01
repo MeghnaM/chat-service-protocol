@@ -44,17 +44,20 @@ class ChatClient(asynchat.async_chat):
         if resp_obj["response_code"] == "130":
             if self.username == resp_obj["parameters"]["username"]:
                 self.groupNames = resp_obj["payload"]
+
+                self.processResponse(resp_obj)
+
                 self.obj["group_fetch_success"] = True
                 self.groupNames_received = True
-                self.processResponse(resp_obj)
             else:
                 return
 
         elif resp_obj["response_code"] == "240":
             if self.username == resp_obj["parameters"]["username"]:
+                self.processResponse(resp_obj)
+
                 self.obj["group_fetch_success"] = False
                 self.groupNames_received = True
-                self.processResponse(resp_obj)
             else:
                 return
 
@@ -163,7 +166,6 @@ class ChatClient(asynchat.async_chat):
             if user_input == "1":
                 para = {"username": username}
                 self.sendPDURequest("LIST", para, "CC", "")
-                print "Choose Group"
 
                 while not self.groupNames_received:  # waits for server response
                     pass
