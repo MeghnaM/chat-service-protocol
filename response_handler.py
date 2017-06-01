@@ -30,6 +30,8 @@ class ResponseHandler:
             return self.receiveNegativeAcknowledgementAction()
         elif resp_code == "230":
             return self.groupCreationFailedAction()
+        elif resp_code == "240":
+            return self.joinGroupFailedAction()
         elif resp_code == "300":
             return self.receiveGeneralErrorCodeAction()
         elif resp_code == "310":
@@ -87,6 +89,9 @@ class ResponseHandler:
     def groupCreationFailedAction(self):
         # print self.pduData.payload
         pass
+
+    def joinGroupFailedAction(self):
+        print self.pduData.payload
 
     def groupJoinedAction(self):
         print "Group joined successfully"
