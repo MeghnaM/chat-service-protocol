@@ -46,5 +46,5 @@ To do if we have time:
 Ask Sergey:
 1. Is our implementation of the DFA enough?
 2. We are using TCP/IP for socket connections (explain line in paper specification)
-3. Explain extra credit
-4. Is using asynchat fine?
+3. Explain extra credit - client should be able to find the server running anywhere on the network, without being given the IP address of the network
+4. Is using asynchat fine? Yes
