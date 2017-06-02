@@ -8,7 +8,6 @@ from pdu_request import PDURequest
 from response_handler import ResponseHandler
 import pdu_data
 
-
 class ChatClient(asynchat.async_chat):
     __host = "127.0.0.1"
     __port = 12345
