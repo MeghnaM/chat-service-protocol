@@ -44,8 +44,8 @@ class ChatClient(asynchat.async_chat):
         resp_obj = json.loads(resp_str)                                     # deserialization
 
         if resp_obj["response_code"] == "190":
-            self.movedOut = True
             self.processResponse(resp_obj)
+            self.movedOut = True
 
         elif resp_obj["response_code"] == "130":
             if self.username == resp_obj["parameters"]["username"]:

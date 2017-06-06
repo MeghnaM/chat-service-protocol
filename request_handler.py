@@ -182,7 +182,6 @@ class RequestHandler:
     def mssgAction(self):
         #parameters nick, chatname, ascii text
         #server recfeives ascoo text and broadcasts across chatrooom
-        print "Message action called"
         return PDUResponse("140", {}, "DC", self.obj["payload"]).createResponseStr()
 
     def kickAction(self):
