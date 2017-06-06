@@ -1,1 +1,0 @@
-{"users": [{"username": "meghna", "adminGroups": ["CSP", "clc"], "bannedGroups": [], "isAdmin": true, "password": "xxx", "isBanned": false}, {"username": "bob", "adminGroups": ["clc"], "bannedGroups": [], "isAdmin": true, "password": "bob", "isBanned": false}]}

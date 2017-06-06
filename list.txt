@@ -1,1 +1,0 @@
-{"chats": [{"chat_name": "CSP", "admins": ["meghna"], "banned_users": [], "users": ["meghna", "bob"], "black_users": []}, {"chat_name": "clc", "admins": ["meghna"], "black_users": [], "users": ["meghna", "bob"], "banned_users": []}]}
