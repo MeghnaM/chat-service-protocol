@@ -59,5 +59,6 @@ Outstanding tasks:
 5. When a user logs out, they should be removed from the client map as well - MM
 6. Create video of protocol in action - SS
 7. Update RFC of our protocol - WG
-8. Comment all the files - MM, JP
-9. Write a thorough explaination of how our protocol is implemented - MM, JP
+8. Comment all the files AND include clearly how we implemented states of the DFA - JP
+9. Write a thorough explaination of how our protocol is implemented - MM
+10. Send an email to Mike and Sergey - evaluate your group members' work -- EVERYBODY (Lecture 8 - slide 3)
