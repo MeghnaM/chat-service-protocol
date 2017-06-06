@@ -47,8 +47,9 @@ class ChatClient(asynchat.async_chat):
         resp_obj = json.loads(resp_str)                                     # deserialization
 
         if resp_obj["response_code"] == "190":
-            self.processResponse(resp_obj)
-            self.movedOut = True
+            if resp_obj["parameters"]["username"] == self.username:
+                self.processResponse(resp_obj)
+                self.movedOut = True
 
         if resp_obj["response_code"] == "191":
             if resp_obj["parameters"]["banned_user"] == self.username:
@@ -250,7 +251,9 @@ class ChatClient(asynchat.async_chat):
         else:
             print "Help         : -help"
             print "Logout       : -logout"
-            print "Join group   : -join"
+
+            if self.chat_name == "":
+                print "Join group   : -join"
 
             if self.chat_name != "":
                 print "Exit Group   : -moveout"
@@ -275,13 +278,17 @@ class ChatClient(asynchat.async_chat):
                 self.sendPDURequest("LEVE", {"username": self.username, "chat_name": self.chat_name}, "CC", "")
 
                 while not self.movedOut:
-                    self.movedOut = False
+                    pass
 
+                self.movedOut = False
                 print ""
                 self.createChatGroups()
 
             elif msg == "-join":
-                self.createChatGroups()
+                if self.chat_name != "":
+                    print "First run -moveout"
+                else:
+                    self.createChatGroups()
 
             elif "-kick" in msg:
                 kick_user = msg.split(" ")[1:]

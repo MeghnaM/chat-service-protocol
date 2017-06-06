@@ -32,7 +32,7 @@ class RequestHandler:
         elif command == "DROP":
             return self.dropAction()
         elif command == "LIST":
-            return self.listAction(client_map)
+            return self.listAction()
         elif command == "PMSG":
             return self.privateMessageAction()
         elif command == "PRVM":
@@ -48,9 +48,9 @@ class RequestHandler:
         elif command == "NWUA":
             return self.createNewUserAccount(handler, client_map)
         elif command == "CHAT":
-            return self.createNewChat(client_map)
+            return self.createNewChat(handler, client_map)
         elif command == "LEVE":
-            return self.leaveChat(client_map)
+            return self.leaveChat(handler, client_map)
 
     def getFileContents(self, filename):
         if not os.path.isfile('./' + filename):
@@ -264,7 +264,7 @@ class RequestHandler:
         #server removes nick from elevated user list for the chat room object
         pass
 
-    def listAction(self, client_map):
+    def listAction(self):
         # parameters nick
         # server sends a list of chatrooms from the global chat room object
         chat_para = self.getListFile(self.obj["list"]).strip()
@@ -311,7 +311,7 @@ class RequestHandler:
                 data = myfile.read().replace('\n', '')
             return data
 
-    def createNewChat(self, client_map):
+    def createNewChat(self, handler, client_map):
         chat_para = self.getListFile(self.obj["list"]).strip()
         if chat_para is not None and chat_para:
             all_chat_obj = json.loads(chat_para)
@@ -357,15 +357,17 @@ class RequestHandler:
         for client in client_map["clients"]:
             if client["username"] == self.obj["username"]:
                 client["chat_name"] = self.obj["chat_name"]
+                client["handler"] = handler
 
         return PDUResponse("170", {}, "", "").createResponseStr()
 
     def getList(self):
         pass
 
-    def leaveChat(self, client_map):
+    def leaveChat(self, handler, client_map):
         for client in client_map["clients"]:
             if client["username"] == self.obj["username"]:
                 client["chat_name"] = ""
+                client["handler"] = handler
                 break
-        return PDUResponse("190", {}, "", self.obj["username"] + " has left the chat room").createResponseStr()
+        return PDUResponse("190", {"username": self.obj["username"]}, "", self.obj["username"] + " has left the chat room").createResponseStr()
