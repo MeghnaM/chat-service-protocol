@@ -28,7 +28,7 @@ class ChatHandler(asynchat.async_chat):
 
         if len(client_map["clients"]) == len(chat_room) - 1:        # client is only filled when user is authenticated
             for client in client_map["clients"]:
-                if client["username"] == "" or client["chat_name"] == "":
+                if client["username"] == "" or client["chat_name"] == "" and req_obj["command"] != "MSSG":
                     client["handler"].push(response)
                 elif client["chat_name"] != "" and client["chat_name"] == req_obj["parameters"]["chat_name"]:
                     client["handler"].push(response)
@@ -41,7 +41,8 @@ class ChatHandler(asynchat.async_chat):
         self.buffer = []
         # TODO: Update close condition - only when *all* the clients have logged out,
         #       should the server connection be terminated
-        if msg == "logout":
+        if msg == "-logout":
+            # TODO: remove from client_map
             self.handle_close()
 
     def handle_close(self):
@@ -96,6 +97,9 @@ class ChatServer(asyncore.dispatcher):
             obj["username"] = req_obj["parameters"]["username"]
             obj["chat_name"] = req_obj["parameters"]["chat_name"]
             obj["list"] = self.__list
+
+        elif command == "LEVE":
+            obj["username"] = req_obj["parameters"]["username"]
 
         elif command == "MSSG":
             obj["payload"] = req_obj["payload"]

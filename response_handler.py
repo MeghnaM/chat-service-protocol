@@ -22,6 +22,8 @@ class ResponseHandler:
             return self.newGroupCreatedAction()
         elif resp_code == "180":
             return self.groupJoinedAction()
+        elif resp_code == "190":
+            return self.leftGroupAction()
         elif resp_code == "200":
             return self.authenticationFailedAction()
         elif resp_code == "210":
@@ -97,3 +99,7 @@ class ResponseHandler:
     def groupJoinedAction(self):
         print "Group joined successfully"
         print "-> ",
+
+    def leftGroupAction(self):
+        print self.pduData.payload
+        print ""

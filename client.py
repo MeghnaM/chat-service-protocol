@@ -23,7 +23,9 @@ class ChatClient(asynchat.async_chat):
         self.groupNames_received = False
         self.username = ""
         self.chat_name = ""
+        self.isAdmin = True     # for testing
         self.groupNames = []
+        self.movedOut = False
 
     def connect_to_server(self):
         self.connect((ChatClient.__host, ChatClient.__port))
@@ -41,7 +43,11 @@ class ChatClient(asynchat.async_chat):
 
         resp_obj = json.loads(resp_str)                                     # deserialization
 
-        if resp_obj["response_code"] == "130":
+        if resp_obj["response_code"] == "190":
+            self.movedOut = True
+            self.processResponse(resp_obj)
+
+        elif resp_obj["response_code"] == "130":
             if self.username == resp_obj["parameters"]["username"]:
                 self.groupNames = resp_obj["payload"]
 
@@ -118,7 +124,7 @@ class ChatClient(asynchat.async_chat):
             print "2 -> Sign up"
             user_input = raw_input("-> ")
 
-            if user_input =="1":
+            if user_input == "1":
                 self.authentication_complete = False
                 username = raw_input("username-> ")
                 password = raw_input("password-> ")
@@ -131,7 +137,7 @@ class ChatClient(asynchat.async_chat):
                 if self.obj["authenticated"]:
                     self.username = username
                     print("Login successful")
-                    self.createChatGroups(username)
+                    self.createChatGroups()
                     break
                 else:
                     print "Either your username or password is incorrect"
@@ -150,7 +156,7 @@ class ChatClient(asynchat.async_chat):
                 if self.obj["authenticated"]:
                     self.username = username
                     print("Account created")
-                    self.createChatGroups(username)
+                    self.createChatGroups()
                     break
                 else:
                     print "Username already exists"
@@ -159,20 +165,20 @@ class ChatClient(asynchat.async_chat):
                 print "Invalid input, try again."
                 continue
 
-    def createChatGroups(self, username):
+    def createChatGroups(self):
         while True:
             print "1 -> Join available groups"
             print "2 -> Create new group"
             user_input = raw_input("-> ")
             if user_input == "1":
-                para = {"username": username, "chat_name": ""}
+                para = {"username": self.username, "chat_name": ""}
                 self.sendPDURequest("LIST", para, "CC", "")
 
                 while not self.groupNames_received:  # waits for server response
                     pass
 
                 if self.obj["group_fetch_success"]:
-                    self.joinGroup(username)
+                    self.joinGroup(self.username)
                     self.obj["group_fetch_success"] = False
                     self.groupNames_received = False
                     break
@@ -183,7 +189,7 @@ class ChatClient(asynchat.async_chat):
             elif user_input == "2":
                 print "Enter Group name"
                 groupName = raw_input("-> ")
-                para = {"username": username, "chat_name": groupName}
+                para = {"username": self.username, "chat_name": groupName}
                 self.sendPDURequest("CHAT", para, "CC", "")
 
                 while not self.create_group_resp_recv:         # waits for server response
@@ -191,7 +197,7 @@ class ChatClient(asynchat.async_chat):
 
                 if self.obj["groupCreated"]:
                     self.chat_name = groupName
-                    print("Group Created")
+                    print("Group Created. You have joined the group")
                     break
                 else:
                     print "Group already exists"
@@ -206,6 +212,19 @@ class ChatClient(asynchat.async_chat):
         para = {"username": username, "chat_name": self.groupNames[int(user_input)-1]}
         self.sendPDURequest("JOIN", para, "CC", "")
 
+    def displayOptions(self):
+        if self.username == "":
+            print "Log in first"
+        else:
+            print "Help         : -help"
+            print "Logout       : -logout"
+
+            if self.chat_name != "":
+                print "Exit Group   : -moveout"
+
+            if client.isAdmin:      # also check if admin of current group
+                print "Ban User     : -ban"
+
 client = ChatClient()
 client.connect_to_server()
 
@@ -219,9 +238,22 @@ client.initiateDialog()
 
 while True:
     msg = raw_input('-> ')
-    if msg == "logout":
+    if msg == "-logout":
         client.handle_close()
         break
 
-    msg = "(" + client.username + ") " + msg
-    client.sendPDURequest("MSSG", {"username": client.username, "chat_name": client.chat_name}, "DC", msg)
+    elif msg == "-help":
+        client.displayOptions()
+
+    elif msg == "-moveout":
+        client.sendPDURequest("LEVE", {"username": client.username, "chat_name": client.chat_name}, "DC", "")
+
+        while not client.movedOut:
+            client.movedOut = False
+
+        print ""
+        client.createChatGroups()
+
+    else:
+        msg = "(" + client.username + ") " + msg
+        client.sendPDURequest("MSSG", {"username": client.username, "chat_name": client.chat_name}, "DC", msg)

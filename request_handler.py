@@ -32,7 +32,7 @@ class RequestHandler:
         elif command == "DROP":
             return self.dropAction()
         elif command == "LIST":
-            return self.listAction()
+            return self.listAction(client_map)
         elif command == "PMSG":
             return self.privateMessageAction()
         elif command == "PRVM":
@@ -48,7 +48,9 @@ class RequestHandler:
         elif command == "NWUA":
             return self.createNewUserAccount(handler, client_map)
         elif command == "CHAT":
-            return self.createNewChat()
+            return self.createNewChat(client_map)
+        elif command == "LEVE":
+            return self.leaveChat(client_map)
 
     def getCredentialFile(self, filename):
         if not os.path.isfile('./' + filename):
@@ -202,7 +204,7 @@ class RequestHandler:
         #server removes nick from elevated user list for the chat room object
         pass
 
-    def listAction(self):
+    def listAction(self, client_map):
         # parameters nick
         # server sends a list of chatrooms from the global chat room object
         chat_para = self.getListFile(self.obj["list"]).strip()
@@ -212,6 +214,11 @@ class RequestHandler:
             groupList = []
             for user_acc in all_users_obj["chats"]:
                 groupList.append(user_acc["chat_name"])
+
+            # for client in client_map["clients"]:
+            #     if client["username"] == self.obj["username"]:
+            #         client["chat_name"] = ""
+
             return PDUResponse("130", {"username": self.obj["username"]}, "", groupList).createResponseStr()
 
         else:
@@ -250,7 +257,7 @@ class RequestHandler:
                 data = myfile.read().replace('\n', '')
             return data
 
-    def createNewChat(self):
+    def createNewChat(self, client_map):
         chat_para = self.getListFile(self.obj["list"]).strip()
         if chat_para is not None and chat_para:
             all_chat_obj = json.loads(chat_para)
@@ -293,7 +300,18 @@ class RequestHandler:
         file.write(json.dumps(all_users_obj))
         file.close()
 
+        for client in client_map["clients"]:
+            if client["username"] == self.obj["username"]:
+                client["chat_name"] = ""
+
         return PDUResponse("170", {}, "", "").createResponseStr()
 
     def getList(self):
         pass
+
+    def leaveChat(self, client_map):
+        for client in client_map["clients"]:
+            if client["username"] == self.obj["username"]:
+                client["chat_name"] = ""
+                break
+        return PDUResponse("190", {}, "", self.obj["username"] + " has left the chat room").createResponseStr()
