@@ -21,11 +21,14 @@ class ChatClient(asynchat.async_chat):
         self.authentication_complete = False
         self.create_group_resp_recv = False
         self.groupNames_received = False
+        self.ban_complete = False
+        self.ban_allowed = False
         self.username = ""
         self.chat_name = ""
         self.isAdmin = True     # for testing
         self.groupNames = []
         self.movedOut = False
+        # self.valid_state = True
 
     def connect_to_server(self):
         self.connect((ChatClient.__host, ChatClient.__port))
@@ -46,6 +49,17 @@ class ChatClient(asynchat.async_chat):
         if resp_obj["response_code"] == "190":
             self.processResponse(resp_obj)
             self.movedOut = True
+
+        if resp_obj["response_code"] == "191":
+            if resp_obj["parameters"]["banned_user"] == self.username:
+                self.chat_name = ""
+                # self.valid_state = False
+                self.processResponse(resp_obj)
+                # self.createChatGroups()
+
+        if resp_obj["response_code"] == "250":
+            if resp_obj["parameters"]["username"] == self.username:
+                self.processResponse(resp_obj)
 
         elif resp_obj["response_code"] == "130":
             if self.username == resp_obj["parameters"]["username"]:
@@ -230,19 +244,72 @@ class ChatClient(asynchat.async_chat):
             else:
                 break
 
-
     def displayOptions(self):
         if self.username == "":
             print "Log in first"
         else:
             print "Help         : -help"
             print "Logout       : -logout"
+            print "Join group   : -join"
 
             if self.chat_name != "":
                 print "Exit Group   : -moveout"
 
             if client.isAdmin:      # also check if admin of current group
-                print "Ban User     : -ban"
+                print "Kick User    : -kick username"
+                print "Ban User     : -ban username"
+
+    def chatMode(self):
+        while True:
+            # while not self.valid_state:
+            #     pass
+            msg = raw_input('-> ')
+            if msg == "-logout":
+                self.handle_close()
+                break
+
+            elif msg == "-help":
+                self.displayOptions()
+
+            elif msg == "-moveout":
+                self.sendPDURequest("LEVE", {"username": self.username, "chat_name": self.chat_name}, "CC", "")
+
+                while not self.movedOut:
+                    self.movedOut = False
+
+                print ""
+                self.createChatGroups()
+
+            elif msg == "-join":
+                self.createChatGroups()
+
+            elif "-kick" in msg:
+                kick_user = msg.split(" ")[1:]
+                if len(kick_user) == 0:
+                    print "Missing parameters. Syntax ==>  -kick username"
+                elif len(kick_user) > 1:
+                    print "Too many parameters. Syntax ==>  -kick username"
+                else:
+                    parameters = {"username": client.username, "chat_name": client.chat_name, "kick_user": kick_user}
+                    client.sendPDURequest("KICK", parameters, "AC", "")
+
+            elif "-ban" in msg:
+                banned = msg.strip().split(" ")[1:]
+                if len(banned) == 0:
+                    print "Missing parameters. Syntax ==>  -ban username"
+                elif len(banned) > 1:
+                    print "Too many parameters. Syntax ==>  -ban username"
+                elif banned[0] == client.username:
+                    print "You cannot ban yourself"
+                else:
+                    parameters = {"username": client.username, "chat_name": client.chat_name, "banned_user": banned[0]}
+                    self.sendPDURequest("BANN", parameters, "AC", "")
+            else:
+                msg = "(" + self.username + ") " + msg
+                self.sendPDURequest("MSSG", {"username": self.username, "chat_name": self.chat_name}, "DC", msg)
+
+            # while not self.valid_state:
+            #     pass
 
 client = ChatClient()
 client.connect_to_server()
@@ -254,25 +321,4 @@ comm.start()
 # >>> NOTE: Write all request | response related commands after this!  <<<
 
 client.initiateDialog()
-
-while True:
-    msg = raw_input('-> ')
-    if msg == "-logout":
-        client.handle_close()
-        break
-
-    elif msg == "-help":
-        client.displayOptions()
-
-    elif msg == "-moveout":
-        client.sendPDURequest("LEVE", {"username": client.username, "chat_name": client.chat_name}, "DC", "")
-
-        while not client.movedOut:
-            client.movedOut = False
-
-        print ""
-        client.createChatGroups()
-
-    else:
-        msg = "(" + client.username + ") " + msg
-        client.sendPDURequest("MSSG", {"username": client.username, "chat_name": client.chat_name}, "DC", msg)
+client.chatMode()

@@ -22,9 +22,9 @@ class RequestHandler:
         elif command == "MSSG":
             return self.mssgAction()
         elif command == "KICK":
-            return self.kickAction()
-        elif command == "BANK":
-            return self.banAction()
+            return self.kickAction(client_map)
+        elif command == "BANN":
+            return self.banAction(client_map)
         elif command == "BLAK":
             return self.blackAction()
         elif command == "ELVT":
@@ -52,7 +52,7 @@ class RequestHandler:
         elif command == "LEVE":
             return self.leaveChat(client_map)
 
-    def getCredentialFile(self, filename):
+    def getFileContents(self, filename):
         if not os.path.isfile('./' + filename):
             file = open(filename, "w+")
             file.close()
@@ -64,7 +64,7 @@ class RequestHandler:
             return data
 
     def createNewUserAccount(self, handler, client_map):
-        users_str = self.getCredentialFile(self.obj["filename"]).strip()
+        users_str = self.getFileContents(self.obj["filename"]).strip()
         if users_str is not None and users_str:
             all_users_obj = json.loads(users_str)
         else:
@@ -89,7 +89,7 @@ class RequestHandler:
         return PDUResponse("110", {}, "CC", "").createResponseStr()
 
     def loginAuthentication(self, handler, client_map):
-        users_str = self.getCredentialFile(self.obj["filename"]).strip()
+        users_str = self.getFileContents(self.obj["filename"]).strip()
 
         if users_str is not None and users_str:
             all_users_obj = json.loads(users_str)
@@ -119,7 +119,6 @@ class RequestHandler:
 
     # readyAction sends a REDY PDU to the server
     def readyAction(self):
-        print "Ready called"
         return PDUResponse("100", {}, "CC", "Ready").createResponseStr()
 
     # nickAction sends a NICK PDU to the server
@@ -134,44 +133,58 @@ class RequestHandler:
         chat_para = self.getListFile(self.obj["list"]).strip()
 
         all_chat_obj = json.loads(chat_para)
-        for user_acc in all_chat_obj["chats"]:
-            users = user_acc["users"]
-            for i in range(0, len(users)):
-                if users[i] == self.obj["username"]:
-                    break
-                elif len(users) - 1 == i and users[i] != self.obj["username"]:
-                    users.append(self.obj["username"])
-            user_acc["users"] = users
+        isBanned = False
 
-        file = open(self.obj["list"], "w")
-        file.write(json.dumps(all_chat_obj))
-        file.close()
-
-        f = open("user_accounts.txt")
-        data = f.read().replace('\n', '').strip()
-        all_users_obj = json.loads(data)
-        for user_acc in all_users_obj["users"]:
-            if user_acc["username"] == self.obj["username"]:
-                user_acc["isAdmin"] = True
-                adminGroups = user_acc["adminGroups"]
-                for i in range(0, len(adminGroups)):
-                    if adminGroups[i] == self.obj["chat_name"]:
-                        break
-                    if len(adminGroups) - 1 == i:
-                        adminGroups.append(self.obj["chat_name"])
-                if len(adminGroups) == 0:
-                    adminGroups.append(self.obj["chat_name"])
+        for chat in all_chat_obj["chats"]:
+            if chat["chat_name"] == self.obj["chat_name"] and self.obj["username"] in chat["banned_users"]:
+                isBanned = True
                 break
-        f.close()
-        file = open("user_accounts.txt", "w")
-        file.write(json.dumps(all_users_obj))
-        file.close()
 
-        for client in client_map["clients"]:
-            if client["username"] == self.obj["username"]:
-                client["chat_name"] = self.obj["chat_name"]
+            # users = chat["users"]
+            # for i in range(0, len(users)):
+            #     if users[i] == self.obj["username"]:
+            #         break
+            #     elif len(users) - 1 == i and users[i] != self.obj["username"]:
+            #         users.append(self.obj["username"])
+            # chat["users"] = users
 
-        return PDUResponse("180", {"username": self.obj["username"], "chat_name": self.obj["chat_name"]}, "", "").createResponseStr()
+
+
+        # f = open("user_accounts.txt")
+        # data = f.read().replace('\n', '').strip()
+        # all_users_obj = json.loads(data)
+        # for user_acc in all_users_obj["users"]:
+        #     if user_acc["username"] == self.obj["username"]:
+        #         # user_acc["isAdmin"] = True
+        #         adminGroups = user_acc["adminGroups"]
+        #         for i in range(0, len(adminGroups)):
+        #             if adminGroups[i] == self.obj["chat_name"]:
+        #                 break
+        #             if len(adminGroups) - 1 == i:
+        #                 adminGroups.append(self.obj["chat_name"])
+        #         if len(adminGroups) == 0:
+        #             adminGroups.append(self.obj["chat_name"])
+        #         break
+        # f.close()
+        # file = open("user_accounts.txt", "w")
+        # file.write(json.dumps(all_users_obj))
+        # file.close()
+
+        if not isBanned:
+            file = open(self.obj["list"], "w")
+            file.write(json.dumps(all_chat_obj))
+            file.close()
+
+            for client in client_map["clients"]:
+                if client["username"] == self.obj["username"]:
+                    client["chat_name"] = self.obj["chat_name"]
+                    client["handler"] = handler
+
+            return PDUResponse("180", {"username": self.obj["username"], "chat_name": self.obj["chat_name"]}, "CC", "").createResponseStr()
+
+        else:
+            return PDUResponse("240", {"username": self.obj["username"], "chat_name": self.obj["chat_name"]}, "CC",
+                               "You are banned from joining this group").createResponseStr()
 
     def partAction(self):
         #parameters nick and chatname
@@ -184,11 +197,59 @@ class RequestHandler:
         #server recfeives ascoo text and broadcasts across chatrooom
         return PDUResponse("140", {}, "DC", self.obj["payload"]).createResponseStr()
 
-    def kickAction(self):
+    def kickAction(self, client_map):
         pass
 
-    def banAction(self):
-        pass
+    def banAction(self, client_map):
+        users_str = self.getFileContents(self.obj["filename"]).strip()
+        groups_str = self.getFileContents(self.obj["list"]).strip()
+
+        if users_str is not None and users_str:
+            all_users_obj = json.loads(users_str)
+        else:
+            all_users_obj = {"users": []}
+
+        if groups_str is not None and groups_str:
+            groups_obj = json.loads(groups_str)
+        else:
+            groups_obj = {"chats": []}
+
+        isAdmin = False
+
+        for chat in groups_obj["chats"]:
+            if chat["chat_name"] == self.obj["chat_name"]:
+                for admin in chat["admins"]:
+                    if admin == self.obj["username"]:
+                        isAdmin = True
+                        chat["banned_users"].append(self.obj["banned_user"])
+                        break
+                break
+
+        if isAdmin:
+            for user_acc in all_users_obj["users"]:
+                if user_acc["username"] == self.obj["banned_user"]:
+                    user_acc["bannedGroups"].append(self.obj["chat_name"])
+                    break
+
+            file = open(self.obj["filename"], "w")
+            file.write(json.dumps(all_users_obj))
+            file.close()
+
+            file = open(self.obj["list"], "w")
+            file.write(json.dumps(groups_obj))
+            file.close()
+
+            for client in client_map["clients"]:
+                if client["username"] == self.obj["banned_user"]:
+                    client["chat_name"] = ""
+                    client["handler"].chat_name = ""
+
+            return PDUResponse("191", {"banned_user": self.obj["banned_user"]}, "CC",
+                               self.obj["banned_user"] + " has been banned from the group").createResponseStr()
+
+        else:
+            return PDUResponse("250", {"username": self.obj["username"]}, "CC", "You are not the admin of this group")\
+                .createResponseStr()
 
     def blackAction(self):
         pass
@@ -213,13 +274,8 @@ class RequestHandler:
             for user_acc in all_chat_obj["chats"]:
                 groupList.append(user_acc["chat_name"])
 
-            # for client in client_map["clients"]:
-            #     if client["username"] == self.obj["username"]:
-            #         client["chat_name"] = ""
-
             return PDUResponse("130", {"username": self.obj["username"]}, "", groupList).createResponseStr()
         else:
-            all_chat_obj = {"users": []}
             return PDUResponse("240", {"username": self.obj["username"]}, "", "There are currently no groups").createResponseStr()
 
     def privateMessageAction(self):
@@ -283,7 +339,7 @@ class RequestHandler:
         all_users_obj = json.loads(data)
         for user_acc in all_users_obj["users"]:
             if user_acc["username"] == self.obj["username"]:
-                user_acc["isAdmin"] = True
+                # user_acc["isAdmin"] = True
                 adminGroups = user_acc["adminGroups"]
                 for i in range(0, len(adminGroups)):
                     if adminGroups[i] == self.obj["chat_name"]:
@@ -300,7 +356,7 @@ class RequestHandler:
 
         for client in client_map["clients"]:
             if client["username"] == self.obj["username"]:
-                client["chat_name"] = ""
+                client["chat_name"] = self.obj["chat_name"]
 
         return PDUResponse("170", {}, "", "").createResponseStr()
 
