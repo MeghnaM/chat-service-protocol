@@ -9,14 +9,14 @@ class RequestHandler:
     def __init__(self, req_obj=None):
         self.obj = req_obj
 
-    def run_command(self, command):
+    def run_command(self, command, handler, client_map):
         # changed from dictionary because all the functions were being called when RequestHandler was being instantiated
         if command == "REDY":
             return self.readyAction()
         elif command == "NICK":
             return self.nickAction()
         elif command == "JOIN":
-            return self.joinAction()
+            return self.joinAction(handler, client_map)
         elif command == "PART":
             return self.partAction()
         elif command == "MSSG":
@@ -44,9 +44,9 @@ class RequestHandler:
         elif command == "KEEP":
             return self.keepAliveAction()
         elif command == "AUTH":
-            return self.loginAuthentication()
+            return self.loginAuthentication(handler, client_map)
         elif command == "NWUA":
-            return self.createNewUserAccount()
+            return self.createNewUserAccount(handler, client_map)
         elif command == "CHAT":
             return self.createNewChat()
 
@@ -61,7 +61,7 @@ class RequestHandler:
                 data = myfile.read().replace('\n', '')
             return data
 
-    def createNewUserAccount(self):
+    def createNewUserAccount(self, handler, client_map):
         users_str = self.getCredentialFile(self.obj["filename"]).strip()
         if users_str is not None and users_str:
             all_users_obj = json.loads(users_str)
@@ -78,9 +78,15 @@ class RequestHandler:
         file.write(json.dumps(all_users_obj))
         file.close()
 
+        client_map["clients"].append({
+            "username": self.obj["username"],
+            "chat_name": "",
+            "handler": handler
+        })
+
         return PDUResponse("110", {}, "CC", "").createResponseStr()
 
-    def loginAuthentication(self):
+    def loginAuthentication(self, handler, client_map):
         users_str = self.getCredentialFile(self.obj["filename"]).strip()
 
         if users_str is not None and users_str:
@@ -98,6 +104,12 @@ class RequestHandler:
                     break
 
             if valid_user:
+                client_map["clients"].append({
+                    "username": self.obj["username"],
+                    "chat_name": "",
+                    "handler": handler
+                })
+
                 return PDUResponse("110", {}, "CC", "").createResponseStr()
             else:
                 print "Either your username or password is incorrect"
@@ -113,7 +125,7 @@ class RequestHandler:
         pass
 
     # joinAction sends a JOIN PDU to the server
-    def joinAction(self):
+    def joinAction(self, handler, client_map):
         # parameters nick and chatname
         # server adds nick to chat_room user list
         # client opens chat room window
@@ -152,7 +164,12 @@ class RequestHandler:
         file = open("user_accounts.txt", "w")
         file.write(json.dumps(all_users_obj))
         file.close()
-        return PDUResponse("180", {}, "", self.obj["username"]).createResponseStr()
+
+        for client in client_map["clients"]:
+            if client["username"] == self.obj["username"]:
+                client["chat_name"] = self.obj["chat_name"]
+
+        return PDUResponse("180", {"username": self.obj["username"], "chat_name": self.obj["chat_name"]}, "", "").createResponseStr()
 
     def partAction(self):
         #parameters nick and chatname

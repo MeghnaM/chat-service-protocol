@@ -22,6 +22,7 @@ class ChatClient(asynchat.async_chat):
         self.create_group_resp_recv = False
         self.groupNames_received = False
         self.username = ""
+        self.chat_name = ""
         self.groupNames = []
 
     def connect_to_server(self):
@@ -61,7 +62,8 @@ class ChatClient(asynchat.async_chat):
                 return
 
         elif resp_obj["response_code"] == "180":
-            if self.username == resp_obj["payload"]:
+            if self.username == resp_obj["parameters"]["username"]:
+                self.chat_name = resp_obj["parameters"]["chat_name"]
                 self.processResponse(resp_obj)
             else:
                 return
@@ -105,7 +107,7 @@ class ChatClient(asynchat.async_chat):
 
     def handle_close(self):
         self.close()
-        print "Client A's connection has been terminated"
+        print "Your connection has been terminated"
 
     def initiateDialog(self):
         print "Welcome to our CSP system. To continue, select one of the following"
@@ -120,7 +122,7 @@ class ChatClient(asynchat.async_chat):
                 self.authentication_complete = False
                 username = raw_input("username-> ")
                 password = raw_input("password-> ")
-                creds = {"username": username, "password": password}
+                creds = {"username": username, "password": password, "chat_name": ""}
                 self.sendPDURequest("AUTH", creds, "CC", "")
 
                 while not self.authentication_complete:         # waits for server response
@@ -139,7 +141,7 @@ class ChatClient(asynchat.async_chat):
                 self.authentication_complete = False
                 username = raw_input("choose username-> ")
                 password = raw_input("choose password-> ")
-                creds = {"username": username, "password": password}
+                creds = {"username": username, "password": password, "chat_name": ""}
                 self.sendPDURequest("NWUA", creds, "CC", "")
 
                 while not self.authentication_complete:         # waits for server response
@@ -163,7 +165,7 @@ class ChatClient(asynchat.async_chat):
             print "2 -> Create new group"
             user_input = raw_input("-> ")
             if user_input == "1":
-                para = {"username": username}
+                para = {"username": username, "chat_name": ""}
                 self.sendPDURequest("LIST", para, "CC", "")
 
                 while not self.groupNames_received:  # waits for server response
@@ -188,13 +190,13 @@ class ChatClient(asynchat.async_chat):
                     pass
 
                 if self.obj["groupCreated"]:
-                    self.username = username
+                    self.chat_name = groupName
                     print("Group Created")
                     break
                 else:
                     print "Group already exists"
                     continue
-                break
+
             else:
                 print "Invalid input"
                 continue
@@ -222,4 +224,4 @@ while True:
         break
 
     msg = "(" + client.username + ") " + msg
-    client.sendPDURequest("MSSG", {}, "DC", msg)
+    client.sendPDURequest("MSSG", {"username": client.username, "chat_name": client.chat_name}, "DC", msg)

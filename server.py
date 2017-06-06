@@ -6,6 +6,9 @@ import json
 import request_handler as reqh
 
 chat_room = {}
+client_map = {
+    "clients": []
+}
 
 
 class ChatHandler(asynchat.async_chat):
@@ -21,11 +24,19 @@ class ChatHandler(asynchat.async_chat):
     def found_terminator(self):     # for broadcasting
         msg = ''.join(self.buffer)
         req_obj = json.loads(msg)
-        response = self.server_obj.processRequest(req_obj)
+        response = self.server_obj.processRequest(req_obj, self)
 
-        for handler in chat_room.itervalues():
-            if hasattr(handler, 'push'):
-                handler.push(response)
+        if len(client_map["clients"]) == len(chat_room) - 1:        # client is only filled when user is authenticated
+            for client in client_map["clients"]:
+                if client["username"] == "" or client["chat_name"] == "":
+                    client["handler"].push(response)
+                elif client["chat_name"] != "" and client["chat_name"] == req_obj["parameters"]["chat_name"]:
+                    client["handler"].push(response)
+
+        else:
+            for handler in chat_room.itervalues():
+                if hasattr(handler, 'push'):
+                    handler.push(response)
 
         self.buffer = []
         # TODO: Update close condition - only when *all* the clients have logged out,
@@ -62,7 +73,7 @@ class ChatServer(asyncore.dispatcher):
             print 'Incoming connection from %s' % repr(addr)
             handler = ChatHandler(sock, self)
 
-    def processRequest(self, req_obj):
+    def processRequest(self, req_obj, handler):
         command = req_obj["command"]
         list = {}
         # TODO: Validate command i.e. check if command exists and if command is valid for current state
@@ -90,7 +101,7 @@ class ChatServer(asyncore.dispatcher):
             obj["payload"] = req_obj["payload"]
 
         reqh_obj = reqh.RequestHandler(obj)
-        return reqh_obj.run_command(command)        # returns response string
+        return reqh_obj.run_command(command, handler, client_map)        # returns response string
 
 server = ChatServer()
 asyncore.loop(map=chat_room)
