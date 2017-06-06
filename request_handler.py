@@ -208,11 +208,10 @@ class RequestHandler:
         # parameters nick
         # server sends a list of chatrooms from the global chat room object
         chat_para = self.getListFile(self.obj["list"]).strip()
-
-        if chat_para != "":
-            all_users_obj = json.loads(chat_para)
+        if chat_para is not None and chat_para:
+            all_chat_obj = json.loads(chat_para)
             groupList = []
-            for user_acc in all_users_obj["chats"]:
+            for user_acc in all_chat_obj["chats"]:
                 groupList.append(user_acc["chat_name"])
 
             # for client in client_map["clients"]:
@@ -220,8 +219,8 @@ class RequestHandler:
             #         client["chat_name"] = ""
 
             return PDUResponse("130", {"username": self.obj["username"]}, "", groupList).createResponseStr()
-
         else:
+            all_chat_obj = {"users": []}
             return PDUResponse("240", {"username": self.obj["username"]}, "", "There are currently no groups").createResponseStr()
 
     def privateMessageAction(self):
@@ -250,7 +249,7 @@ class RequestHandler:
         if not os.path.isfile('./' + list):
             file = open(list, "w+")
             file.close()
-            return "{}"
+            return ""
 
         else:
             with open(list, 'r') as myfile:

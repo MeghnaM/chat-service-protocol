@@ -66,7 +66,6 @@ class ResponseHandler:
         chatList = self.pduData.payload
         for i in range(0, len(chatList)):
             print i+1, ":", chatList[i]
-            print "-> ",
 
     def receiveQueuedMessagesAction(self):
         print self.pduData.payload
