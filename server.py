@@ -36,6 +36,7 @@ class ChatHandler(asynchat.async_chat):
         if req_obj["version"] == self.server_obj.getVersion():
             # process request and create response string
             response = self.server_obj.processRequest(req_obj, self)
+            response_obj = json.loads(response)
         else:
             response = self.server_obj.incompatibleVersion()
 
@@ -52,6 +53,8 @@ class ChatHandler(asynchat.async_chat):
             elif client["chat_name"] == "" and client["prev_chat"] != req_obj["parameters"]["chat_name"]:
                 # chat_name = "" is valid for below commands from the user
                 if req_obj["command"] in ["AUTH", "LIST", "CHAT", "REDY"]:
+                    client["handler"].push(response)
+                elif response_obj["response_code"] == "240":
                     client["handler"].push(response)
 
             elif client["chat_name"] == "" and client["prev_chat"] == req_obj["parameters"]["chat_name"]:

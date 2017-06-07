@@ -329,12 +329,14 @@ class ChatClient(asynchat.async_chat):
 
                 self.movedOut = False
                 print ""
+                self.groupNames = []
                 self.createOrFetchGroups()
 
             elif msg == "-join":            # client wants to join a new group
                 if self.chat_name != "":
                     print "First run -moveout"
                 else:
+                    self.groupNames = []
                     self.createOrFetchGroups()
 
             elif "-kick" in msg:            # admin client who wants to kick a user from the chat (user can rejoin)
