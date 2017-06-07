@@ -28,11 +28,15 @@ class ChatHandler(asynchat.async_chat):
 
         if len(client_map["clients"]) == len(chat_room) - 1:        # client is only filled when user is authenticated
             for client in client_map["clients"]:
-                # if client["username"] == req_obj["parameters"]["username"] and req_obj["command"] not in ["REDY", "JOIN", "LIST", "AUTH", "NWUA"]:
-                #     continue
-                if client["username"] == "" or client["chat_name"] == "" and req_obj["command"] != "MSSG":
-                    client["handler"].push(response)
-                elif client["chat_name"] != "" and client["chat_name"] == req_obj["parameters"]["chat_name"]:
+                if client["username"] == "":
+                    if req_obj["command"] in ["NWUA", "AUTH"]:
+                        client["handler"].push(response)
+
+                elif client["chat_name"] == "":
+                    if req_obj["command"] in ["AUTH", "LIST", "JOIN", "KICK", "BANN", "REDY"]:
+                        client["handler"].push(response)
+
+                elif client["chat_name"] == req_obj["parameters"]["chat_name"]:
                     client["handler"].push(response)
 
         else:

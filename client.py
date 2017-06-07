@@ -3,13 +3,13 @@ import asyncore
 import socket
 import threading
 import json
-import os
 from pdu_request import PDURequest
 from response_handler import ResponseHandler
 import pdu_data
 
 class ChatClient(asynchat.async_chat):
     __host = "127.0.0.1"
+    # __host = "168.235.64.44"
     __port = 12345
 
     def __init__(self):
@@ -51,14 +51,12 @@ class ChatClient(asynchat.async_chat):
                 self.processResponse(resp_obj)
                 self.movedOut = True
 
-        if resp_obj["response_code"] == "191":
+        elif resp_obj["response_code"] == "191":
             if resp_obj["parameters"]["banned_user"] == self.username:
                 self.chat_name = ""
-                # self.valid_state = False
-                self.processResponse(resp_obj)
-                # self.createChatGroups()
+            self.processResponse(resp_obj)
 
-        if resp_obj["response_code"] == "250":
+        elif resp_obj["response_code"] == "250":
             if resp_obj["parameters"]["username"] == self.username:
                 self.processResponse(resp_obj)
 
@@ -97,7 +95,6 @@ class ChatClient(asynchat.async_chat):
             else:
                 self.processResponse(resp_obj)
                 print("-> "),           # comma added to allow next print to be on the same line
-            pass
 
         elif resp_obj["response_code"] == "110":
             self.obj["authenticated"] = True
@@ -264,8 +261,6 @@ class ChatClient(asynchat.async_chat):
 
     def chatMode(self):
         while True:
-            # while not self.valid_state:
-            #     pass
             msg = raw_input('-> ')
             if msg == "-logout":
                 self.handle_close()
@@ -312,11 +307,11 @@ class ChatClient(asynchat.async_chat):
                     parameters = {"username": client.username, "chat_name": client.chat_name, "banned_user": banned[0]}
                     self.sendPDURequest("BANN", parameters, "AC", "")
             else:
+                if msg == "" or self.chat_name == "":
+                    continue
+
                 msg = "(" + self.username + ") " + msg
                 self.sendPDURequest("MSSG", {"username": self.username, "chat_name": self.chat_name}, "DC", msg)
-
-            # while not self.valid_state:
-            #     pass
 
 client = ChatClient()
 client.connect_to_server()
