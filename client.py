@@ -307,7 +307,7 @@ class ChatClient(asynchat.async_chat):
                     parameters = {"username": client.username, "chat_name": client.chat_name, "banned_user": banned[0]}
                     self.sendPDURequest("BANN", parameters, "AC", "")
             else:
-                if msg == "" or self.chat_name == "":
+                if msg.strip() == "" or self.chat_name == "":
                     continue
 
                 msg = "(" + self.username + ") " + msg
