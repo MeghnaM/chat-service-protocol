@@ -48,3 +48,17 @@ Ask Sergey:
 2. We are using TCP/IP for socket connections (explain line in paper specification)
 3. Explain extra credit - client should be able to find the server running anywhere on the network, without being given the IP address of the network
 4. Is using asynchat fine? Yes
+
+6.6.2017
+
+Outstanding tasks:
+1. Unable to ban a user from a group when running a distributed server - MM
+2. When I ban a user from a group, and I try to join another group, the options show up twice - JP
+3. Check version number with each request - JP
+4. If one user logs out, everybody gets logged out and the server shuts down. Fix this! - MM
+5. When a user logs out, they should be removed from the client map as well - MM
+6. Create video of protocol in action - SS
+7. Update RFC of our protocol - WG
+8. Comment all the files AND include clearly how we implemented states of the DFA - JP
+9. Write a thorough explaination of how our protocol is implemented - MM
+10. Send an email to Mike and Sergey - evaluate your group members' work -- EVERYBODY (Lecture 8 - slide 3)
