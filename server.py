@@ -32,10 +32,16 @@ class ChatHandler(asynchat.async_chat):
         msg = ''.join(self.buffer)
         req_obj = json.loads(msg)
 
-        # process request and create response string
-        response = self.server_obj.processRequest(req_obj, self)
+        # version check
+        if req_obj["version"] == self.server_obj.getVersion():
+            # process request and create response string
+            response = self.server_obj.processRequest(req_obj, self)
+        else:
+            response = self.server_obj.incompatibleVersion()
 
-        if len(client_map["clients"]) == len(chat_room) - 1:        # client in client_map is only filled once user is authenticated
+        # client in client_map is only filled once user is authenticated
+        if len(client_map["clients"]) == len(chat_room) - 1:
+            # loop for sending response to appropriate clients
             for client in client_map["clients"]:
                 # when username has not been set
                 if client["username"] == "":
@@ -76,6 +82,7 @@ class ChatServer(asyncore.dispatcher):
     __port = 12345                          # Server listening of this port
     __user_file = "./user_accounts.txt"     # User credentials
     __list = "./list.txt"                   # Group details
+    __version = 1.0                         # protocol version
 
     def __init__(self):
         """Initialises the server, and listener is activated"""
@@ -85,6 +92,9 @@ class ChatServer(asyncore.dispatcher):
         self.bind((ChatServer.__host, ChatServer.__port))
         self.listen(5)
         print 'Server listening on ', ChatServer.__host, ':', ChatServer.__port
+
+    def getVersion(self):
+        return self.__version
 
     def handle_accept(self):
         """Async chat calls this method when a client connects to the server"""
@@ -137,6 +147,10 @@ class ChatServer(asyncore.dispatcher):
 
         reqh_obj = reqh.RequestHandler(obj)
         return reqh_obj.run_command(command, handler, client_map)           # returns response string
+
+    def incompatibleVersion(self):
+        reqh_obj = reqh.RequestHandler()
+        return reqh_obj.run_command("VRSN", "", "")         # returns response string
 
 server = ChatServer()
 asyncore.loop(map=chat_room)

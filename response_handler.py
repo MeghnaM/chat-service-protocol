@@ -50,6 +50,8 @@ class ResponseHandler:
             return self.receiveUnknownCommandErrorAction()
         elif resp_code == "320":
             return self.recieveSyntaxErrorAction()
+        elif resp_code == "330":
+            return self.incompatibleVersionAction()
 
     def banSuccessAction(self):
         print "****", self.obj.payload, "****"
@@ -122,3 +124,6 @@ class ResponseHandler:
     def leftGroupAction(self):
         print "****", self.obj.payload, "****"
         print ""
+
+    def incompatibleVersionAction(self):
+        print "****", self.obj.payload, "****"

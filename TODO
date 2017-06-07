@@ -53,8 +53,8 @@ Ask Sergey:
 
 Outstanding tasks:
 1. Unable to ban a user from a group when running a distributed server - MM
-2. When I ban a user from a group, and I try to join another group, the options show up twice - JP
-3. Check version number with each request - JP
+2. When I ban a user from a group, and I try to join another group, the options show up twice - JP (done)
+3. Check version number with each request - JP (done)
 4. If one user logs out, everybody gets logged out and the server shuts down. Fix this! - MM
 5. When a user logs out, they should be removed from the client map as well - MM
 6. Create video of protocol in action - SS

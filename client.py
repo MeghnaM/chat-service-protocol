@@ -10,8 +10,8 @@ import pdu_data
 
 class ChatClient(asynchat.async_chat):
     __host = "127.0.0.1"    # IP
-    # __host = "168.235.64.44"
     __port = 12345          # port that server listens to
+    __version = 1.0         # client protocol version
 
     def __init__(self):
         """constructor for the client object"""
@@ -48,7 +48,7 @@ class ChatClient(asynchat.async_chat):
         :param payload -> extra data that needs to be passed for the command
         """
 
-        str_send = PDURequest(command, parameters, channel, payload).createRequestStr()
+        str_send = PDURequest(self.__version, command, parameters, channel, payload).createRequestStr()
         self.push(str_send)
 
     def collect_incoming_data(self, data):
@@ -132,6 +132,10 @@ class ChatClient(asynchat.async_chat):
         elif resp_obj["response_code"] == "260":            # Kick user failed
             if resp_obj["parameters"]["username"] == self.username:
                 self.processResponse(resp_obj)
+
+        elif resp_obj["response_code"] == "330":            # Incompatible version
+            self.processResponse(resp_obj)
+            self.handle_close()
 
         else:                                               # All other response codes
             self.processResponse(resp_obj)
@@ -225,6 +229,7 @@ class ChatClient(asynchat.async_chat):
                     self.joinGroup(self.username)
                     self.obj["group_fetch_success"] = False
                     self.groupNames_received = False
+                    self.groupNames = []
                     break
                 else:
                     continue
@@ -366,9 +371,9 @@ class ChatClient(asynchat.async_chat):
 
             else:                           # chats sent from the client
                 if self.chat_name == "":
-                    print "You are not connected to any group. Try -help to see the list of the commands"
+                    print "You are not connected to any group. Try -join to join another group"
                     continue
-                elif msg.strip():
+                elif msg.strip() == "":
                     continue
 
                 msg = "(" + self.username + ") " + msg

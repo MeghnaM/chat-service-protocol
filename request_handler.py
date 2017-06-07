@@ -57,6 +57,8 @@ class RequestHandler:
             return self.createNewChat(handler, client_map)
         elif command == "LEVE":
             return self.leaveChat(handler, client_map)
+        elif command == "VRSN":
+            return self.incompatibleVersion()
 
     def getFileContents(self, filename):
         """Reads and returns contents of filename"""
@@ -401,3 +403,6 @@ class RequestHandler:
 
         return PDUResponse("190", {"username": self.obj["username"]}, "",
                            self.obj["username"] + " has left the chat room").createResponseStr()
+
+    def incompatibleVersion(self):
+        return PDUResponse("330", {}, "CC", "Server is running on a different protocol version").createResponseStr()
