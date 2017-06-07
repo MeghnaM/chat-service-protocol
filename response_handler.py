@@ -95,4 +95,3 @@ class ResponseHandler:
 
     def groupJoinedAction(self):
         print "Group joined successfully"
-        print "-> ",

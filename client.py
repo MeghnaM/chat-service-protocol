@@ -21,6 +21,7 @@ class ChatClient(asynchat.async_chat):
         self.authentication_complete = False
         self.create_group_resp_recv = False
         self.groupNames_received = False
+        self.groupJoined = False
         self.username = ""
         self.chat_name = ""
         self.groupNames = []
@@ -65,6 +66,7 @@ class ChatClient(asynchat.async_chat):
             if self.username == resp_obj["parameters"]["username"]:
                 self.chat_name = resp_obj["parameters"]["chat_name"]
                 self.processResponse(resp_obj)
+                self.groupJoined = True
             else:
                 return
 
@@ -173,6 +175,7 @@ class ChatClient(asynchat.async_chat):
 
                 if self.obj["group_fetch_success"]:
                     self.joinGroup(username)
+                    self.groupJoined = False
                     self.obj["group_fetch_success"] = False
                     self.groupNames_received = False
                     break
@@ -215,6 +218,8 @@ class ChatClient(asynchat.async_chat):
                     if number == i + 1:
                         para = {"username": username, "chat_name": self.groupNames[int(user_input) - 1]}
                         self.sendPDURequest("JOIN", para, "CC", "")
+                        while not self.groupJoined:
+                            pass
                         chatFound = True
                     elif i == len(self.groupNames)-1 and not chatFound:
                         print "Please enter a valid input"
