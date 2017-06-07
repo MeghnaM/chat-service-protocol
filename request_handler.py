@@ -99,6 +99,7 @@ class RequestHandler:
         client_map["clients"].append({
             "username": self.obj["username"],
             "chat_name": "",
+            "prev_chat": None,
             "handler": handler
         })
 
@@ -129,6 +130,7 @@ class RequestHandler:
                 client_map["clients"].append({
                     "username": self.obj["username"],
                     "chat_name": "",
+                    "prev_chat": None,
                     "handler": handler
                 })
 
@@ -169,7 +171,9 @@ class RequestHandler:
 
             for client in client_map["clients"]:
                 if client["username"] == self.obj["username"]:
+                    prev_chat = client["chat_name"]
                     client["chat_name"] = self.obj["chat_name"]
+                    client["prev_chat"] = prev_chat
                     client["handler"] = handler
 
             parameters = {"username": self.obj["username"], "chat_name": self.obj["chat_name"]}
@@ -216,7 +220,9 @@ class RequestHandler:
             # maintaining client_map object
             for client in client_map["clients"]:
                 if client["username"] == self.obj["kicked_user"]:
+                    prev_chat = client["chat_name"]
                     client["chat_name"] = ""
+                    client["prev_chat"] = prev_chat
                     client["handler"].chat_name = ""
 
             parameters = {"kicked_user": self.obj["kicked_user"]}
@@ -277,7 +283,9 @@ class RequestHandler:
             # maintaining client_map object
             for client in client_map["clients"]:
                 if client["username"] == self.obj["banned_user"]:
+                    prev_chat = client["chat_name"]
                     client["chat_name"] = ""
+                    client["prev_chat"] = prev_chat
                     client["handler"].chat_name = ""
 
             return PDUResponse("191", {"banned_user": self.obj["banned_user"]}, "CC",
@@ -384,6 +392,7 @@ class RequestHandler:
         for client in client_map["clients"]:
             if client["username"] == self.obj["username"]:
                 client["chat_name"] = self.obj["chat_name"]
+                client["prev_chat"] = ""
                 client["handler"] = handler
 
         return PDUResponse("170", {}, "", "").createResponseStr()       # new group created
@@ -396,7 +405,9 @@ class RequestHandler:
 
         for client in client_map["clients"]:
             if client["username"] == self.obj["username"]:
+                prev_chat = client["chat_name"]
                 client["chat_name"] = ""
+                client["prev_chat"] = prev_chat
                 client["handler"] = handler
                 break
 

@@ -40,28 +40,34 @@ class ChatHandler(asynchat.async_chat):
             response = self.server_obj.incompatibleVersion()
 
         # client in client_map is only filled once user is authenticated
-        if len(client_map["clients"]) == len(chat_room) - 1:
-            # loop for sending response to appropriate clients
-            for client in client_map["clients"]:
-                # when username has not been set
-                if client["username"] == "":
-                    if req_obj["command"] in ["NWUA", "AUTH"]:      # ignore all other commands
-                        client["handler"].push(response)
-
-                # when client has not joined a group or if is banned, kicked or moved out from group
-                elif client["chat_name"] == "":
-                    # chat_name = "" is only valid for below commands from the user
-                    if req_obj["command"] in ["AUTH", "LIST", "JOIN", "CHAT", "KICK", "BANN", "LEVE", "REDY"]:
-                        client["handler"].push(response)
-
-                # send to users part of the same group
-                elif client["chat_name"] == req_obj["parameters"]["chat_name"]:
+        # if len(client_map["clients"]) == len(chat_room) - 1:
+        # loop for sending response to appropriate clients
+        for client in client_map["clients"]:
+            # when username has not been set
+            if client["username"] == "":
+                if req_obj["command"] in ["NWUA", "AUTH"]:      # ignore all other commands
                     client["handler"].push(response)
 
-        else:       # broadcast to all
-            for handler in chat_room.itervalues():
-                if hasattr(handler, 'push'):
-                    handler.push(response)
+            # when client has not joined a group or if is banned, kicked or moved out from group
+            elif client["chat_name"] == "" and client["prev_chat"] != req_obj["parameters"]["chat_name"]:
+                # chat_name = "" is valid for below commands from the user
+                if req_obj["command"] in ["AUTH", "LIST", "CHAT", "REDY"]:
+                    client["handler"].push(response)
+
+            elif client["chat_name"] == "" and client["prev_chat"] == req_obj["parameters"]["chat_name"]:
+                # chat_name = "" for the following commands as well
+                if req_obj["command"] in ["JOIN", "KICK", "BANN", "LEVE"]:
+                    client["prev_chat"] = None
+                    client["handler"].push(response)
+
+            # send to users part of the same group
+            elif client["chat_name"] == req_obj["parameters"]["chat_name"]:
+                client["handler"].push(response)
+
+        # else:       # broadcast to all
+        #     for handler in chat_room.itervalues():
+        #         if hasattr(handler, 'push'):
+        #             handler.push(response)
 
         self.buffer = []
         # TODO: Update close condition - only when *all* the clients have logged out,
@@ -104,6 +110,12 @@ class ChatServer(asyncore.dispatcher):
             sock, addr = pair
             print 'Incoming connection from %s' % repr(addr)
             handler = ChatHandler(sock, self)
+            client_map["clients"].append({
+                "username": "",
+                "chat_name": "",
+                "prev_chat": "",
+                "handler": handler
+            })
 
     def processRequest(self, req_obj, handler):
         """Processes the requests from the client i.e. appropriate function is called on the RequestHandler class based
