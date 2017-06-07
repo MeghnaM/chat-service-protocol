@@ -1,6 +1,4 @@
 class PDUData:
-    # c = socket()
-
     def __init__(self, nick="", params=[], channel="", payload=""):
         self.nick = nick                    # nickname of user
         self.message_parameters = params    # 512 byte parameter space

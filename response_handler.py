@@ -1,11 +1,13 @@
 class ResponseHandler:
-    def __init__(self, obj):
-        self.pduData = obj
+    """ResponseHandler class is used by the client to handle all the incoming responses from the server. 
+    Almost all functions of ResponseHandler would be printing something to notify the client"""
 
+    def __init__(self, obj):
+        self.obj = obj
 
     def runResponseCodeAction(self, resp_code):
         if resp_code == "100":
-            return self.acknowledgeConnectionAction(self.pduData)
+            return self.acknowledgeConnectionAction(self.obj)
         elif resp_code == "110":
             return self.authenticationSuccessfulAction()
         elif resp_code == "120":
@@ -50,19 +52,19 @@ class ResponseHandler:
             return self.recieveSyntaxErrorAction()
 
     def banSuccessAction(self):
-        print self.pduData.payload
+        print "****", self.obj.payload, "****"
 
     def banFailedAction(self):
-        print self.pduData.payload
+        print "****", self.obj.payload, "****"
 
     def kickSuccessAction(self):
-        print self.pduData.payload
+        print "****", self.obj.payload, "****"
 
     def kickFailedAction(self):
-        print self.pduData.payload
+        print "****", self.obj.payload, "****"
 
     def acknowledgeConnectionAction(self, data):
-        print self.pduData.payload
+        print self.obj.payload
 
     def authenticationSuccessfulAction(self):
         pass
@@ -81,12 +83,12 @@ class ResponseHandler:
 
     def receiveListOfChannelsAction(self):
         print "Choose Group"
-        chatList = self.pduData.payload
+        chatList = self.obj.payload
         for i in range(0, len(chatList)):
             print i+1, ":", chatList[i]
 
     def receiveQueuedMessagesAction(self):
-        print self.pduData.payload
+        print self.obj.payload
 
     def receivePositiveAcknowledgmentAction(self):
         pass
@@ -107,16 +109,16 @@ class ResponseHandler:
         pass
 
     def groupCreationFailedAction(self):
-        # print self.pduData.payload
+        # print self.obj.payload
         pass
 
     def joinGroupFailedAction(self):
-        print self.pduData.payload
+        print "****", self.obj.payload, "****"
 
     def groupJoinedAction(self):
-        print "Group joined successfully"
+        print "****", self.obj.payload, "****"
         print "-> ",
 
     def leftGroupAction(self):
-        print self.pduData.payload
+        print "****", self.obj.payload, "****"
         print ""
