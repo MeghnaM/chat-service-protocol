@@ -26,6 +26,8 @@ class ResponseHandler:
             return self.leftGroupAction()
         elif resp_code == "191":
             return self.banSuccessAction()
+        elif resp_code == "192":
+            return self.kickSuccessAction()
         elif resp_code == "200":
             return self.authenticationFailedAction()
         elif resp_code == "210":
@@ -38,6 +40,8 @@ class ResponseHandler:
             return self.joinGroupFailedAction()
         elif resp_code == "250":
             return self.banFailedAction()
+        elif resp_code == "260":
+            return self.kickFailedAction()
         elif resp_code == "300":
             return self.receiveGeneralErrorCodeAction()
         elif resp_code == "310":
@@ -49,6 +53,12 @@ class ResponseHandler:
         print self.pduData.payload
 
     def banFailedAction(self):
+        print self.pduData.payload
+
+    def kickSuccessAction(self):
+        print self.pduData.payload
+
+    def kickFailedAction(self):
         print self.pduData.payload
 
     def acknowledgeConnectionAction(self, data):

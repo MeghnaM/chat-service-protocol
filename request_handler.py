@@ -198,7 +198,43 @@ class RequestHandler:
         return PDUResponse("140", {}, "DC", self.obj["payload"]).createResponseStr()
 
     def kickAction(self, client_map):
-        pass
+        users_str = self.getFileContents(self.obj["filename"]).strip()
+        groups_str = self.getFileContents(self.obj["list"]).strip()
+
+        if users_str is not None and users_str:
+            all_users_obj = json.loads(users_str)
+        else:
+            all_users_obj = {"users": []}
+
+        if groups_str is not None and groups_str:
+            groups_obj = json.loads(groups_str)
+        else:
+            groups_obj = {"chats": []}
+
+        isAdmin = False
+
+        for chat in groups_obj["chats"]:
+            if chat["chat_name"] == self.obj["chat_name"]:
+                for admin in chat["admins"]:
+                    if admin == self.obj["username"]:
+                        isAdmin = True
+                        break
+                break
+
+        if isAdmin:
+            # TODO: maintain the kicks?
+
+            for client in client_map["clients"]:
+                if client["username"] == self.obj["kicked_user"]:
+                    client["chat_name"] = ""
+                    client["handler"].chat_name = ""
+
+            return PDUResponse("192", {"kicked_user": self.obj["kicked_user"]}, "CC",
+                               self.obj["kicked_user"] + " has been kicked from the group").createResponseStr()
+
+        else:
+            return PDUResponse("260", {"username": self.obj["username"]}, "CC", "You are not the admin of this group") \
+                .createResponseStr()
 
     def banAction(self, client_map):
         users_str = self.getFileContents(self.obj["filename"]).strip()

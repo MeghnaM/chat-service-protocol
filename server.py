@@ -99,9 +99,15 @@ class ChatServer(asyncore.dispatcher):
             obj["chat_name"] = req_obj["parameters"]["chat_name"]
             obj["list"] = self.__list
 
-        elif command == "BANN" or command == "KICK":
+        elif command == "BANN":
             obj["chat_name"] = req_obj["parameters"]["chat_name"]
             obj["banned_user"] = req_obj["parameters"]["banned_user"]
+            obj["filename"] = self.__user_file
+            obj["list"] = self.__list
+
+        elif command == "KICK":
+            obj["chat_name"] = req_obj["parameters"]["chat_name"]
+            obj["kicked_user"] = req_obj["parameters"]["kicked_user"]
             obj["filename"] = self.__user_file
             obj["list"] = self.__list
 

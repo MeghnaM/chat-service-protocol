@@ -7,7 +7,6 @@ from pdu_request import PDURequest
 from response_handler import ResponseHandler
 import pdu_data
 
-
 class ChatClient(asynchat.async_chat):
     __host = "127.0.0.1"
     # __host = "168.235.64.44"
@@ -48,8 +47,8 @@ class ChatClient(asynchat.async_chat):
         resp_obj = json.loads(resp_str)                                     # deserialization
 
         if resp_obj["response_code"] == "190":
+            self.processResponse(resp_obj)
             if resp_obj["parameters"]["username"] == self.username:
-                self.processResponse(resp_obj)
                 self.movedOut = True
 
         elif resp_obj["response_code"] == "191":
@@ -57,7 +56,16 @@ class ChatClient(asynchat.async_chat):
                 self.chat_name = ""
             self.processResponse(resp_obj)
 
+        elif resp_obj["response_code"] == "192":
+            if resp_obj["parameters"]["kicked_user"] == self.username:
+                self.chat_name = ""
+            self.processResponse(resp_obj)
+
         elif resp_obj["response_code"] == "250":
+            if resp_obj["parameters"]["username"] == self.username:
+                self.processResponse(resp_obj)
+
+        elif resp_obj["response_code"] == "260":
             if resp_obj["parameters"]["username"] == self.username:
                 self.processResponse(resp_obj)
 
@@ -287,14 +295,16 @@ class ChatClient(asynchat.async_chat):
                     self.createChatGroups()
 
             elif "-kick" in msg:
-                kick_user = msg.split(" ")[1:]
+                kick_user = msg.strip().split(" ")[1:]
                 if len(kick_user) == 0:
                     print "Missing parameters. Syntax ==>  -kick username"
                 elif len(kick_user) > 1:
                     print "Too many parameters. Syntax ==>  -kick username"
+                elif kick_user[0] == self.username:
+                    print "You cannot kick yourself"
                 else:
-                    parameters = {"username": client.username, "chat_name": client.chat_name, "kick_user": kick_user}
-                    client.sendPDURequest("KICK", parameters, "AC", "")
+                    parameters = {"username": client.username, "chat_name": client.chat_name, "kicked_user": kick_user[0]}
+                    self.sendPDURequest("KICK", parameters, "AC", "")
 
             elif "-ban" in msg:
                 banned = msg.strip().split(" ")[1:]
@@ -302,7 +312,7 @@ class ChatClient(asynchat.async_chat):
                     print "Missing parameters. Syntax ==>  -ban username"
                 elif len(banned) > 1:
                     print "Too many parameters. Syntax ==>  -ban username"
-                elif banned[0] == client.username:
+                elif banned[0] == self.username:
                     print "You cannot ban yourself"
                 else:
                     parameters = {"username": client.username, "chat_name": client.chat_name, "banned_user": banned[0]}
