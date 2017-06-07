@@ -51,7 +51,7 @@ class ChatHandler(asynchat.async_chat):
                 # when client has not joined a group or if is banned, kicked or moved out from group
                 elif client["chat_name"] == "":
                     # chat_name = "" is only valid for below commands from the user
-                    if req_obj["command"] in ["AUTH", "LIST", "JOIN", "KICK", "BANN", "LEVE", "REDY"]:
+                    if req_obj["command"] in ["AUTH", "LIST", "JOIN", "CHAT", "KICK", "BANN", "LEVE", "REDY"]:
                         client["handler"].push(response)
 
                 # send to users part of the same group

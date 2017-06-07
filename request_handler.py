@@ -348,7 +348,6 @@ class RequestHandler:
         # checking if group already exists
         for groupChat in all_chat_obj["chats"]:
             if groupChat["chat_name"] == self.obj["chat_name"]:
-                print "Duplicate groups"
                 return PDUResponse("230", {}, "", "Group name already exists").createResponseStr()
 
         users = [self.obj["username"]]
