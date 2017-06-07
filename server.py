@@ -33,7 +33,7 @@ class ChatHandler(asynchat.async_chat):
                         client["handler"].push(response)
 
                 elif client["chat_name"] == "":
-                    if req_obj["command"] in ["AUTH", "LIST", "JOIN", "KICK", "BANN", "REDY"]:
+                    if req_obj["command"] in ["AUTH", "LIST", "JOIN", "KICK", "BANN", "LEVE", "REDY"]:
                         client["handler"].push(response)
 
                 elif client["chat_name"] == req_obj["parameters"]["chat_name"]:
