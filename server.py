@@ -28,7 +28,9 @@ class ChatHandler(asynchat.async_chat):
 
         if len(client_map["clients"]) == len(chat_room) - 1:        # client is only filled when user is authenticated
             for client in client_map["clients"]:
-                if client["username"] == "" or client["chat_name"] == "":
+                # if client["username"] == req_obj["parameters"]["username"] and req_obj["command"] not in ["REDY", "JOIN", "LIST", "AUTH", "NWUA"]:
+                #     continue
+                if client["username"] == "" or client["chat_name"] == "" and req_obj["command"] != "MSSG":
                     client["handler"].push(response)
                 elif client["chat_name"] != "" and client["chat_name"] == req_obj["parameters"]["chat_name"]:
                     client["handler"].push(response)
@@ -41,7 +43,8 @@ class ChatHandler(asynchat.async_chat):
         self.buffer = []
         # TODO: Update close condition - only when *all* the clients have logged out,
         #       should the server connection be terminated
-        if msg == "logout":
+        if msg == "-logout":
+            # TODO: remove from client_map
             self.handle_close()
 
     def handle_close(self):
@@ -53,7 +56,7 @@ class ChatHandler(asynchat.async_chat):
 class ChatServer(asyncore.dispatcher):
     __host = "127.0.0.1"
     __port = 12345
-    __filename = "./user_accounts.txt"
+    __user_file = "./user_accounts.txt"
     __list = "./list.txt"
 
     def __init__(self):
@@ -62,9 +65,6 @@ class ChatServer(asyncore.dispatcher):
         self.bind((ChatServer.__host, ChatServer.__port))
         self.listen(5)
         print 'Server listening on ', ChatServer.__host, ':', ChatServer.__port
-
-    def getFileName(self):
-        return self.__filename
 
     def handle_accept(self):
         pair = self.accept()
@@ -77,24 +77,28 @@ class ChatServer(asyncore.dispatcher):
         command = req_obj["command"]
         list = {}
         # TODO: Validate command i.e. check if command exists and if command is valid for current state
-        obj = {}
+        obj = {
+            "username": req_obj["parameters"]["username"]
+        }
         if command == "AUTH" or command == "NWUA":
-            obj["username"] = req_obj["parameters"]["username"]
             obj["password"] = req_obj["parameters"]["password"]
-            obj["filename"] = self.__filename
+            obj["filename"] = self.__user_file
 
         elif command == "LIST":
-            obj["username"] = req_obj["parameters"]["username"]
             obj["list"] = self.__list
 
         elif command == "CHAT":
-            obj["username"] = req_obj["parameters"]["username"]
             obj["chat_name"] = req_obj["parameters"]["chat_name"]
             obj["list"] = self.__list
 
         elif command == "JOIN":
-            obj["username"] = req_obj["parameters"]["username"]
             obj["chat_name"] = req_obj["parameters"]["chat_name"]
+            obj["list"] = self.__list
+
+        elif command == "BANN" or command == "KICK":
+            obj["chat_name"] = req_obj["parameters"]["chat_name"]
+            obj["banned_user"] = req_obj["parameters"]["banned_user"]
+            obj["filename"] = self.__user_file
             obj["list"] = self.__list
 
         elif command == "MSSG":
