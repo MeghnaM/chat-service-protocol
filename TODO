@@ -1,5 +1,59 @@
 TO DO:
 
+6.8.2017
+
+Meghna:
+1. Make template for beginning of file comments for Jeshur
+2. A document describing which files satisfy each of the specified requirements. This
+document should be titled Requirements_Team_<x>.<ext>
+-- With your submission, include a file that
+details what files, classes, etc. satisfy each Protocol Requirement. Within each
+file, you must identify the segments of code that satisfy the requirement. For
+instance, the code that implements your DFA should begin with a comment
+that says “STATEFUL”. In the document, you must also indicate whether or
+not you implemented the extra credit and how. 
+3. PDU's for document & mark where protocol requirements are implemented in code - NOW
+4. Try the exta credit
+
+Jeshur:
+1. All (well-commented) source code. My basic rule is that all code should be commented in a
+way that others can pick up the code and instantly understand it – write comments the way
+you would want to see them if you picked up code and had to learn it (basically a lot of
+comments – each block should have some level of comments). The top of each file should
+contain the class name, date, group members, and purpose of the file. 
+-- You are required to provide documentation describing how your project
+satisfies the Protocol Requirements. You must label areas of your code which
+address each of these requirements.
+
+Shivam:
+1. A README containing the following information 
+- How to compile and run your programs (including any usercodes and passwords needed).
+- An analysis about how robust your assignment is – do you think that it’s tough to crack
+through fuzzing? Explain how you tested your implementation’s robustness 
+** Black box and white box testing
+** Testing from the perspective of the user
+** Analysis of how the tests were structured - tested with multiple clients and ran through multiple scenarios
+- Indicate if you implemented the extra credit. 
+2. A video of your protocol in action! This should be between 3 and 5 minutes in length. If not
+possible – then screen shots are acceptable, but not preferred. Please name the file
+appropriately with your Team Name. This can be turned in before the last class (we will
+be looking at the class protocols during the last class of the semester).
+
+Ted:
+1. An updated complete proposal document including any changes or updates we suggested and
+a section describing any differences since the original submission (called out as the
+differences in the second version of the document). The implementation must agree with the
+protocol design. Also include any performance implications that you find during your coding
+and testing. This document should be titled Updated_Design_Team_<X>.<ext>. 
+
+@Everybody - Template for group member evaluation:
+1. Did everybody do an equal amount of work? Why or why not? Write a sentence or two about each person.
+2. Did everybody contribute equally to the code?
+3. How easy was each person to work with?
+4. How was your overall experience working with the team?
+
+----------------------------------------------------------
+
 IMPORTANT: Read the ENTIRE protocol description paper and get a good understanding of how the DFA and Protocol Commands work.
 
 1. Create a class that handles the establishment of a connection to the server, and spawns 3 threads - one for each connection (control, admin and data). A user will start with only two connections, and a third one will be opened once a user becomes an admin. 
@@ -14,6 +68,8 @@ Open Questions:
 4. How do we broadcast a message to all the clients connected to the server?
 
 5. allow same user to login multiple times at the same time? - Jeshur
+
+----------------------------------------------------------
 
 5.29.2017
 States of the DFA:
@@ -49,6 +105,8 @@ Ask Sergey:
 3. Explain extra credit - client should be able to find the server running anywhere on the network, without being given the IP address of the network
 4. Is using asynchat fine? Yes
 
+--------------------------------------------------------
+
 6.6.2017
 
 Outstanding tasks:
@@ -62,3 +120,4 @@ Outstanding tasks:
 8. Comment all the files AND include clearly how we implemented states of the DFA - JP
 9. Write a thorough explaination of how our protocol is implemented - MM
 10. Send an email to Mike and Sergey - evaluate your group members' work -- EVERYBODY (Lecture 8 - slide 3)
+

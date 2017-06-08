@@ -73,18 +73,6 @@ class ChatHandler(asynchat.async_chat):
         #             handler.push(response)
 
         self.buffer = []
-        # TODO: Update close condition - only when *all* the clients have logged out,
-        #       should the server connection be terminated
-        if msg == "-logout":
-            # TODO: remove from client_map
-            self.handle_close()
-
-    def handle_close(self):
-        """Async chat calls this if the server has thrown an unhandled error or if the server wants to terminate"""
-        self.close()
-        print "Server session has been terminated"
-        sys.exit(0)
-
 
 class ChatServer(asyncore.dispatcher):
     __host = "127.0.0.1"                    # Server IP
