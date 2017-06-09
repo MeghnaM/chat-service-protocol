@@ -5,17 +5,18 @@ from chat_room import Chat_room
 from pdu_response import PDUResponse
 
 
+"""RequestHandler class is used by the server to handle all the incoming requests from the client"""
 class RequestHandler:
-    """RequestHandler class is used by the server to handle all the incoming requests from the client"""
-
+    """Constructor for RequestHandler class"""
     def __init__(self, req_obj=None):
         self.obj = req_obj
 
+    """Calls the associated function of the command
+    handler -> the client socket
+    client_map -> map of username and the client socket"""
+
     def run_command(self, command, handler, client_map):
-        """Calls the associated function of the command
-        :param command -> command fired by the client
-        :param handler -> the client socket
-        :param client_map -> map of username and the client socket"""
+        # Following if-else loops checks the command received and perform the associated function
 
         if command == "REDY":
             return self.readyAction()
@@ -60,42 +61,51 @@ class RequestHandler:
         elif command == "VRSN":
             return self.incompatibleVersion()
 
+    """Reads and returns contents of filename"""
     def getFileContents(self, filename):
-        """Reads and returns contents of filename"""
-
+        # If filename does not exist
         if not os.path.isfile('./' + filename):
+            # Creates new file with name as filename
             file = open(filename, "w+")
             file.close()
             return ""
 
+        # Filename exists
         else:
+            # Reads file and returns file contents
             with open(filename, 'r') as myfile:
                 data = myfile.read().replace('\n', '')
             return data
 
+    """Creates new user account and saves it to file"""
     def createNewUserAccount(self, handler, client_map):
-        """Creates new user account and saves it to file"""
-
-        # fetching file contents
+        # Fetching user account file data
         users_str = self.getFileContents(self.obj["filename"]).strip()
+
+        # Constructing JSON object of existing data from text of the file
         if users_str is not None and users_str:
             all_users_obj = json.loads(users_str)
         else:
             all_users_obj = {"users": []}
 
-        # checking if user already exists
+        # Checking if user already exists
         for user_acc in all_users_obj["users"]:
             if user_acc["username"] == self.obj["username"]:
-                return PDUResponse("200", {}, "", "").createResponseStr()       # username already exists
+                # Username already exists
+                return PDUResponse("200", {}, "", "").createResponseStr()
 
-        # creating new user and updating the users file
+        # Creating new user and updating the users file
         new_user = User(self.obj["username"], self.obj["password"])
+
+        # Updating the all_users object with new user
         all_users_obj["users"].append(json.loads(json.dumps(new_user.__dict__)))
+
+        # Opening file in empty mode and dumps the updated data back to the file
         file = open(self.obj["filename"], "w")
         file.write(json.dumps(all_users_obj))
         file.close()
 
-        # maintaining client_map object
+        # Updating the client_map object
         client_map["clients"].append({
             "username": self.obj["username"],
             "chat_name": "",
@@ -103,84 +113,95 @@ class RequestHandler:
             "handler": handler
         })
 
-        return PDUResponse("110", {}, "CC", "").createResponseStr()             # new user created
+        # Creating and returning response for new user created
+        return PDUResponse("110", {}, "CC", "").createResponseStr()
 
+    """Authenticates user based on given credentials"""
     def loginAuthentication(self, handler, client_map):
-        """Authenticates user based on given credentials"""
+        # Fetching user account file data
         users_str = self.getFileContents(self.obj["filename"]).strip()
 
+        # Constructing JSON object of existing data from text of the file
         if users_str is not None and users_str:
             all_users_obj = json.loads(users_str)
         else:
             all_users_obj = {"users": []}
 
-        if len(all_users_obj["users"]) == 0:        # no user data available
+        if len(all_users_obj["users"]) == 0:
+            # No user data available
             return PDUResponse("200", {}, "CC", "").createResponseStr()
         else:
             valid_user = False
 
-            # checking if credentials are correct
+            # Checking if credentials are correct
             for user_acc in all_users_obj["users"]:
                 if user_acc["username"] == self.obj["username"] and user_acc["password"] == self.obj["password"]:
                     valid_user = True
                     break
 
             if valid_user:
-                # maintaining client_map object
+                # Updating client_map object
                 client_map["clients"].append({
                     "username": self.obj["username"],
                     "chat_name": "",
                     "prev_chat": None,
                     "handler": handler
                 })
+                # Creating and returning successful authentication response
+                return PDUResponse("110", {}, "CC", "").createResponseStr()
 
-                return PDUResponse("110", {}, "CC", "").createResponseStr()             # Authenticated
             else:
                 print "Either your username or password is incorrect"
-                return PDUResponse("200", {}, "CC", "").createResponseStr()             # Invalid credentials
+                # Creating and returning response for invalid credentials
+                return PDUResponse("200", {}, "CC", "").createResponseStr()
 
+    """Function to check if server is alive"""
     def readyAction(self):
-        """Function to check if server is alive"""
-        return PDUResponse("100", {}, "CC", "Ready").createResponseStr()                # Server is ready
+        # Return server is ready response
+        return PDUResponse("100", {}, "CC", "Ready").createResponseStr()
 
     # nickAction sends a NICK PDU to the server
     def nickAction(self):
         pass
 
-    # joinAction sends a JOIN PDU to the server
+    """Function responsible for allowing client to join a group"""
     def joinAction(self, handler, client_map):
-        """Function responsible for allowing client to join a group"""
-
+        # Fetching group details data from list file
         chat_para = self.getFileContents(self.obj["list"]).strip()
 
+        # Constructing JSON object of existing data from text of the file
         all_chat_obj = json.loads(chat_para)
         isBanned = False
 
-        # checking if joining user is banned from the group
+        # Checking if joining user is banned from the group
         for chat in all_chat_obj["chats"]:
             if chat["chat_name"] == self.obj["chat_name"] and self.obj["username"] in chat["banned_users"]:
                 isBanned = True
                 break
 
+        # Not banned
         if not isBanned:
+            # Update the group list file
             file = open(self.obj["list"], "w")
             file.write(json.dumps(all_chat_obj))
             file.close()
 
-            # TODO: @Shivam -> Also update userfile
-
+            # Update the client_map
             for client in client_map["clients"]:
                 if client["username"] == self.obj["username"]:
                     prev_chat = client["chat_name"]
-                    client["chat_name"] = self.obj["chat_name"]
-                    client["prev_chat"] = prev_chat
+                    client["chat_name"] = self.obj["chat_name"]     # set to new chat
+                    client["prev_chat"] = prev_chat                 # set to previous chat
                     client["handler"] = handler
 
             parameters = {"username": self.obj["username"], "chat_name": self.obj["chat_name"]}
+
+            # Creating and returning group joined successfully response
             return PDUResponse("180", parameters, "CC", self.obj["username"] + " has joined the group").createResponseStr()
 
         else:
             parameters = {"username": self.obj["username"], "chat_name": self.obj["chat_name"]}
+            # Creating and returning group joining failed response
             return PDUResponse("240", parameters, "CC", "You are banned from joining this group").createResponseStr()
 
     def partAction(self):
@@ -189,15 +210,17 @@ class RequestHandler:
         # client closes chatroom window
         pass
 
+    """Receive message from client and creating response to send to all other clients in the group"""
     def mssgAction(self):
-        """Receive message from client and creating response to send to all other clients in the group"""
-
+        # Creating and returning message response
         return PDUResponse("140", {}, "DC", self.obj["payload"]).createResponseStr()
 
+    """Function for kicking username from a group. Can only be performed by an admin. Username can rejoin"""
     def kickAction(self, client_map):
-        """Function for kicking username from a group. Can only be performed by an admin. Username can rejoin"""
+        # Fetching group details data from list file
         groups_str = self.getFileContents(self.obj["list"]).strip()
 
+        # Constructing JSON object of existing data from text of the file
         if groups_str is not None and groups_str:
             groups_obj = json.loads(groups_str)
         else:
@@ -205,7 +228,7 @@ class RequestHandler:
 
         isAdmin = False
 
-        # checking if client is admin
+        # Checking if client is admin
         for chat in groups_obj["chats"]:
             if chat["chat_name"] == self.obj["chat_name"]:
                 for admin in chat["admins"]:
@@ -215,35 +238,38 @@ class RequestHandler:
                 break
 
         if isAdmin:
-            # TODO: maintain the kicks?
-
-            # maintaining client_map object
+            # Updating the client_map object
             for client in client_map["clients"]:
                 if client["username"] == self.obj["kicked_user"]:
                     prev_chat = client["chat_name"]
-                    client["chat_name"] = ""
-                    client["prev_chat"] = prev_chat
+                    client["chat_name"] = ""            # emptying current chat
+                    client["prev_chat"] = prev_chat     # setting to previous chat
                     client["handler"].chat_name = ""
 
             parameters = {"kicked_user": self.obj["kicked_user"]}
+
+            # Creating and returning successfully kicked response
             return PDUResponse("192", parameters, "CC", self.obj["kicked_user"] + " has been kicked from the group")\
                 .createResponseStr()
 
         else:
+            # Creating and returning failed to kick response
             return PDUResponse("260", {"username": self.obj["username"]}, "CC", "You are not the admin of this group") \
                 .createResponseStr()
 
+    """Function for banning username from a group. Can only be performed by an admin. Username cannot rejoin"""
     def banAction(self, client_map):
-        """Function for banning username from a group. Can only be performed by an admin. Username cannot rejoin"""
-
+        # Loading both user credentials and group details file
         users_str = self.getFileContents(self.obj["filename"]).strip()
         groups_str = self.getFileContents(self.obj["list"]).strip()
 
+        # Construction JSON object from the user credentials string
         if users_str is not None and users_str:
             all_users_obj = json.loads(users_str)
         else:
             all_users_obj = {"users": []}
 
+        # Construction JSON object from the group details string
         if groups_str is not None and groups_str:
             groups_obj = json.loads(groups_str)
         else:
@@ -251,27 +277,27 @@ class RequestHandler:
 
         isAdmin = False
 
-        # checking if admin
+        # Checking if admin
         for chat in groups_obj["chats"]:
             if chat["chat_name"] == self.obj["chat_name"]:
                 for admin in chat["admins"]:
                     if admin == self.obj["username"]:
                         isAdmin = True
 
-                        # adding to list of banned users of the group
+                        # The client is admin, thus can ban the user. Adding to list of banned users of the group
                         chat["banned_users"].append(self.obj["banned_user"])
                         break
                 break
 
         if isAdmin:
-            # updating users account
+            # Updating users account
             for user_acc in all_users_obj["users"]:
                 if user_acc["username"] == self.obj["banned_user"]:
-                    # user accounts maintaining list of groups banned from
+                    # User accounts maintaining list of groups banned from
                     user_acc["bannedGroups"].append(self.obj["chat_name"])
                     break
 
-            # writing back the updated user accounts and group details to the files
+            # Writing back the updated user accounts and group details to the files
             file = open(self.obj["filename"], "w")
             file.write(json.dumps(all_users_obj))
             file.close()
@@ -280,7 +306,7 @@ class RequestHandler:
             file.write(json.dumps(groups_obj))
             file.close()
 
-            # maintaining client_map object
+            # Updating the client_map object
             for client in client_map["clients"]:
                 if client["username"] == self.obj["banned_user"]:
                     prev_chat = client["chat_name"]
@@ -288,10 +314,12 @@ class RequestHandler:
                     client["prev_chat"] = prev_chat
                     client["handler"].chat_name = ""
 
+            # Creating and returning a successful ban response
             return PDUResponse("191", {"banned_user": self.obj["banned_user"]}, "CC",
                                self.obj["banned_user"] + " has been banned from the group").createResponseStr()
 
         else:
+            # Creating and returning a failed to ban response
             return PDUResponse("250", {"username": self.obj["username"]}, "CC", "You are not the admin of this group")\
                 .createResponseStr()
 
@@ -308,17 +336,22 @@ class RequestHandler:
         # server removes nick from elevated user list for the chat room object
         pass
 
+    """Returns list of existing groups available in the server"""
     def listAction(self):
-        """Returns list of existing groups available in the server"""
+        # Getting contents of group details file
         chat_para = self.getFileContents(self.obj["list"]).strip()
+
         if chat_para is not None and chat_para:
+            # Creating JSON object from group details string
             all_chat_obj = json.loads(chat_para)
             groupList = []
             for user_acc in all_chat_obj["chats"]:
                 groupList.append(user_acc["chat_name"])
 
+            # Creating and returning successful group fetch response
             return PDUResponse("130", {"username": self.obj["username"]}, "", groupList).createResponseStr()
         else:
+            # Creating and returning failed group fetch response
             return PDUResponse("240", {"username": self.obj["username"]}, "", "There are currently no groups").createResponseStr()
 
     def privateMessageAction(self):
@@ -343,17 +376,18 @@ class RequestHandler:
     def keepAliveAction(self):
         pass
 
+    """Creates new group and maintains the groups in a file"""
     def createNewChat(self, handler, client_map):
-        """Creates new group and maintains the groups in a file"""
-
-        # load file text
+        # Load group details file
         chat_para = self.getFileContents(self.obj["list"]).strip()
+
+        # Construct JSON from group details string
         if chat_para is not None and chat_para:
             all_chat_obj = json.loads(chat_para)
         else:
             all_chat_obj = {"chats": []}
 
-        # checking if group already exists
+        # Checking if group already exists
         for groupChat in all_chat_obj["chats"]:
             if groupChat["chat_name"] == self.obj["chat_name"]:
                 return PDUResponse("230", {}, "", "Group name already exists").createResponseStr()
@@ -361,48 +395,58 @@ class RequestHandler:
         users = [self.obj["username"]]
         admins = [self.obj["username"]]
         new_user = Chat_room(self.obj["chat_name"], users, admins)
+
+        # Updating the all_chat_obj with the new user
         all_chat_obj["chats"].append(json.loads(json.dumps(new_user.__dict__)))
 
-        # updating files with new group details
+        # Updating group details
         file = open(self.obj["list"], "w")
         file.write(json.dumps(all_chat_obj))
         file.close()
 
+        # Updating the user accounts file
         f = open("user_accounts.txt")
         data = f.read().replace('\n', '').strip()
         all_users_obj = json.loads(data)
         for user_acc in all_users_obj["users"]:
             if user_acc["username"] == self.obj["username"]:
+                # Retrieving admins
                 adminGroups = user_acc["adminGroups"]
                 for i in range(0, len(adminGroups)):
                     if adminGroups[i] == self.obj["chat_name"]:
                         break
                     if len(adminGroups) - 1 == i:
+                        # Adding to list of admins
                         adminGroups.append(self.obj["chat_name"])
                 if len(adminGroups) == 0:
+                    # Adding to list of admins
                     adminGroups.append(self.obj["chat_name"])
                 break
 
         f.close()
+
+        # Writing updated user accounts data back to the file
         file = open("user_accounts.txt", "w")
         file.write(json.dumps(all_users_obj))
         file.close()
 
-        # maintaining client_map object
+        # Updating the client_map object
         for client in client_map["clients"]:
             if client["username"] == self.obj["username"]:
                 client["chat_name"] = self.obj["chat_name"]
                 client["prev_chat"] = ""
                 client["handler"] = handler
 
-        return PDUResponse("170", {}, "", "").createResponseStr()       # new group created
+        # Creating and returning group created successfully response
+        return PDUResponse("170", {}, "", "").createResponseStr()
 
     def getList(self):
         pass
 
+    """Function responsible for removing user from chat room"""
     def leaveChat(self, handler, client_map):
-        """Function responsible for removing user from chat room"""
 
+        # Updating the client_map object
         for client in client_map["clients"]:
             if client["username"] == self.obj["username"]:
                 prev_chat = client["chat_name"]
@@ -411,8 +455,11 @@ class RequestHandler:
                 client["handler"] = handler
                 break
 
+        # Creating and returning a left group successfully response
         return PDUResponse("190", {"username": self.obj["username"]}, "",
                            self.obj["username"] + " has left the chat room").createResponseStr()
 
+    """Function responsible for returning incompatible versions response"""
     def incompatibleVersion(self):
+        # Creating and returning incompatible version response
         return PDUResponse("330", {}, "CC", "Server is running on a different protocol version").createResponseStr()
