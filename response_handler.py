@@ -1,10 +1,28 @@
-class ResponseHandler:
-    """ResponseHandler class is used by the client to handle all the incoming responses from the server. 
-    Almost all functions of ResponseHandler would be printing something to notify the client"""
+"""
+CS 544 - Computer Networks
+5.29.2017
+Group 5: Chat Service Protocol
+File: response_handler.py
+Members: Ted, Shivam, Meghna, Jeshuran
 
+File summary:
+    The purpose of this file is to handle the responses coming from the server. The responses first reach the client file 
+    and control is passed to this response_handler file. The ResponseHandler class has the runResponseCodeAction function 
+    which calls the required function based on the response code received from the server.
+
+    Almost all of the functions defined in this class just involves printing the payload that has been returned back 
+    from the server
+"""
+
+"""ResponseHandler class is used by the client to handle all the incoming responses from the server. 
+Almost all functions of ResponseHandler would be printing something to notify the client"""
+class ResponseHandler:
+
+    """Constructor for ResponseHandler"""
     def __init__(self, obj):
         self.obj = obj
 
+    """Calls the associated function of the response code received"""
     def runResponseCodeAction(self, resp_code):
         if resp_code == "100":
             return self.acknowledgeConnectionAction(self.obj)
@@ -53,15 +71,19 @@ class ResponseHandler:
         elif resp_code == "330":
             return self.incompatibleVersionAction()
 
+    """Prints payload"""
     def banSuccessAction(self):
         print "****", self.obj.payload, "****"
 
+    """Prints payload"""
     def banFailedAction(self):
         print "****", self.obj.payload, "****"
 
+    """Prints payload"""
     def kickSuccessAction(self):
         print "****", self.obj.payload, "****"
 
+    """Prints payload"""
     def kickFailedAction(self):
         print "****", self.obj.payload, "****"
 
@@ -83,6 +105,7 @@ class ResponseHandler:
     def receivePrivateChatMessageAction(self):
         pass
 
+    """Prints list of groups"""
     def receiveListOfChannelsAction(self):
         print "Choose Group"
         chatList = self.obj.payload
@@ -114,16 +137,21 @@ class ResponseHandler:
         # print self.obj.payload
         pass
 
+    """Prints payload"""
     def joinGroupFailedAction(self):
         print "****", self.obj.payload, "****"
 
+    """Prints payload"""
     def groupJoinedAction(self):
         print "****", self.obj.payload, "****"
+        # , allows next print to be on the same line
         print "-> ",
 
+    """Prints payload"""
     def leftGroupAction(self):
         print "****", self.obj.payload, "****"
         print ""
 
+    """Prints payload"""
     def incompatibleVersionAction(self):
         print "****", self.obj.payload, "****"

@@ -1,3 +1,21 @@
+"""
+CS 544 - Computer Networks
+5.29.2017
+Group 5: Chat Service Protocol
+File: request_handler.py
+Members: Ted, Shivam, Meghna, Jeshuran
+
+File summary:
+    The purpose of this file is to handle the requests coming from the client. The requests first reach the server file and 
+    control is passed to this request_handler file. The RequestHandler class has the run_command function which calls 
+    the required function based on the command received from the client.
+    
+    The handler and client_map has been passed on so that the client_map can be updated with the relevant values. Different
+    functions handles updation of client_map differently. It must be noted that the client_map's client list is being 
+    updated and in no point of the code is the client_map lists being replaced. This allows the client_map changes to 
+    be preserved when the control returns back to the server file.
+"""
+
 import json
 import os
 from user import User
@@ -11,11 +29,12 @@ class RequestHandler:
     def __init__(self, req_obj=None):
         self.obj = req_obj
 
-    """Calls the associated function of the command
+    """Calls the associated function of the command received
     handler -> the client socket
     client_map -> map of username and the client socket"""
 
     def run_command(self, command, handler, client_map):
+
         # Following if-else loops checks the command received and perform the associated function
 
         if command == "REDY":
