@@ -1,3 +1,15 @@
+"""
+CS 544 - Computer Networks
+5.23.2017
+Group 5: Chat Service Protocol
+
+Purpose of file:
+   XXX
+"""
+
+# EVERY function should have a comment that looks like """xxx"""
+# All important lines should have a description of how they tie in to the rest of the program
+
 import asynchat
 import asyncore
 import socket
@@ -14,7 +26,6 @@ chat_room = {}          # maintained by async chat
 client_map = {          # maintained by our code
     "clients": []
 }
-
 
 class ChatHandler(asynchat.async_chat):
     def __init__(self, sock, server_obj):
