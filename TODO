@@ -13,7 +13,7 @@ instance, the code that implements your DFA should begin with a comment
 that says “STATEFUL”. In the document, you must also indicate whether or
 not you implemented the extra credit and how. 
 3. PDU's for document & mark where protocol requirements are implemented in code - NOW
-4. Try the exta credit
+4. Make a makefile and update
 
 Jeshur:
 1. All (well-commented) source code. My basic rule is that all code should be commented in a
@@ -50,7 +50,7 @@ and testing. This document should be titled Updated_Design_Team_<X>.<ext>.
 1. Did everybody do an equal amount of work? Why or why not? Write a sentence or two about each person.
 2. Did everybody contribute equally to the code?
 3. How easy was each person to work with?
-4. How was your overall experience working with the team?
+4. How was your overall experience working with the team? Write a few lines and give them an overall grade of A, B or C. + and - can be given at your discretion.
 
 ----------------------------------------------------------
 
