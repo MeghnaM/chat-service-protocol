@@ -3,6 +3,7 @@ CS 544 - Computer Networks
 5.23.2017
 Group 5: Chat Service Protocol
 File: server.py
+Members: Ted, Shivam, Meghna, Jeshuran
 
 File summary:
     The purpose of the file is to create a working server which listens at a specified port. The client will have to
@@ -20,9 +21,6 @@ File summary:
     clients username and the socket details (i.e. the clients IP and port no) in the chat_room.
 
 """
-
-# EVERY function should have a comment that looks like """xxx"""
-# All important lines should have a description of how they tie in to the rest of the program
 
 import asynchat
 import asyncore
@@ -53,41 +51,41 @@ class ChatHandler(asynchat.async_chat):
         # This is the ChatServer classes object
         self.server_obj = server_obj
 
-    """Collects all incoming data from the server until the terminator string has been received"""
+    """Collects all incoming data from the client until the terminator string has been received"""
     def collect_incoming_data(self, data):
         self.buffer.append(data)
 
     """This function is called by async_chat when the terminator, set by set_terminator, is found in the request stream"""
     def found_terminator(self):
-        # joins all the values in the buffer as a single string
+        # Joins all the values in the buffer as a single string
         msg = ''.join(self.buffer)
 
-        # converts the serialized message received from the client back to a JSON object
+        # Converts the serialized message received from the client back to a JSON object
         req_obj = json.loads(msg)
 
         # checking if client and the server are running on the same version of the protocol
         if req_obj["version"] == self.server_obj.getVersion():
             # processRequest processes the request by calling the associated function for the command sent by the client
-            # the variable response is a serialized string that is to be sent to all appropriate clients
+            # The variable response is a serialized string that is to be sent to all appropriate clients
             response = self.server_obj.processRequest(req_obj, self)
 
             # response_obj is the JSON object of the response string
             response_obj = json.loads(response)
         else:
-            # the versions of the client and server is not the same. Returns response code associated with incompatible version
+            # The versions of the client and server is not the same. Returns response code associated with incompatible version
             response = self.server_obj.incompatibleVersion()
 
-        # iterating through client_map i.e. every client that is connected on the server
+        # Iterating through client_map i.e. every client that is connected on the server
         for client in client_map["clients"]:
-            # when username has not been set, only NWUA and AUTH are valid request commands from the client
+            # When username has not been set, only NWUA and AUTH are valid request commands from the client
             if client["username"] == "":
                 if req_obj["command"] in ["NWUA", "AUTH"]:      # ignore all other commands
                     # pushes the response to the client IP and port number. client["handler"] has those client details
                     client["handler"].push(response)
 
-            # when client has not joined a group or if banned, kicked or has moved out from group
+            # When client has not joined a group or if banned, kicked or has moved out from group
             elif client["chat_name"] == "" and client["prev_chat"] != req_obj["parameters"]["chat_name"]:
-                # when chat_name = "", only AUTH, LIST, CHAT, JOIN, REDY are valid commands from the client.
+                # When chat_name = "", only AUTH, LIST, CHAT, JOIN, REDY are valid commands from the client.
                 if req_obj["command"] in ["AUTH", "LIST", "CHAT", "REDY"]:
                     client["handler"].push(response)
 
@@ -104,30 +102,31 @@ class ChatHandler(asynchat.async_chat):
                     client["prev_chat"] = None
                     client["handler"].push(response)
 
-            # sending the response to all the other clients of the group
+            # Sending the response to all the other clients of the group
             elif client["chat_name"] == req_obj["parameters"]["chat_name"]:
                 client["handler"].push(response)
 
-        # clearing the buffer array to get ready for the next request
+        # Clearing the buffer array to get ready for the next request
         self.buffer = []
+
 
 """ChatServer is the class that sets up the server and is responsible for listening to the incoming requests from the client"""
 class ChatServer(asyncore.dispatcher):
-    __host = "127.0.0.1"                    # Server IP
-    __port = 12345                          # Server listening of this port
-    __user_file = "./user_accounts.txt"     # User credentials
-    __list = "./list.txt"                   # Group details
-    __version = 1.0                         # protocol version
+    __host = "127.0.0.1"                    # IP of the server
+    __port = 12345                          # The server will listen to incoming requests on this port
+    __user_file = "./user_accounts.txt"     # File that stores the user credentials
+    __list = "./list.txt"                   # File that stores the group / chat room details
+    __version = 1.0                         # Server protocol version
 
     """Constructor of ChatServer class"""
     def __init__(self):
-        # initializes asyncore dispatcher
+        # Initializes asyncore dispatcher
         asyncore.dispatcher.__init__(self, map=chat_room)
-        # creates a new socket
+        # Creates a new socket
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        # binds server ip and port number
+        # Binds server ip and port number
         self.bind((ChatServer.__host, ChatServer.__port))
-        # start listening to requests from the client
+        # Start listening to requests from the client
         self.listen(5)
         print 'Server listening on ', ChatServer.__host, ':', ChatServer.__port
 
@@ -143,11 +142,11 @@ class ChatServer(asyncore.dispatcher):
             sock, addr = pair
             print 'Incoming connection from %s' % repr(addr)
 
-            # creating a new instance of ChatHandler when a new client connects with the server
+            # Creating a new instance of ChatHandler when a new client connects with the server
             handler = ChatHandler(sock, self)
 
-            # updating the client_map with the details of the new client that has connected with the server.
-            # only the handler field is filled as the username, chat_name and prev_chat details won't exist when the
+            # Updating the client_map with the details of the new client that has connected with the server.
+            # Only the handler field is filled as the username, chat_name and prev_chat details won't exist when the
             # client first connects with the server
             client_map["clients"].append({
                 "username": "",
@@ -161,7 +160,7 @@ class ChatServer(asyncore.dispatcher):
     def processRequest(self, req_obj, handler):
         command = req_obj["command"]
 
-        # preparing a JSON object, obj, to be used by RequestHandler functions with different parameters based on the command
+        # Preparing a JSON object, obj, to be used by RequestHandler functions with different parameters based on the command
         obj = {
             "username": req_obj["parameters"]["username"]
         }
@@ -196,12 +195,12 @@ class ChatServer(asyncore.dispatcher):
             obj["payload"] = req_obj["payload"]
 
         reqh_obj = reqh.RequestHandler(obj)
-        # returns response string
+        # Returns response string
         return reqh_obj.run_command(command, handler, client_map)
 
     def incompatibleVersion(self):
         reqh_obj = reqh.RequestHandler()
-        # returns response string
+        # Returns response string
         return reqh_obj.run_command("VRSN", "", "")
 
 # initializing the ChatServer class

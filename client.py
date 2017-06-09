@@ -1,3 +1,25 @@
+"""
+CS 544 - Computer Networks
+5.23.2017
+Group 5: Chat Service Protocol
+File: client.py
+Members: Ted, Shivam, Meghna, Jeshuran
+
+File summary:
+    The purpose of this file is to create new clients and manage the states that the client is in. The client makes use 
+    of async chat to send and receive data to and from the server. The client needs to know the IP of the server and the
+    port that the server is listening on to make the connection.
+    
+    Async_chat has been used to detect the terminating character/s in the request stream. Once the server receives the 
+    terminating character/s, the found_terminator function gets called after which further request processing can be 
+    performed.
+    
+    The ChatClient is primarily responsible for sending requests to the server and receiving responses from the server. 
+    The server responds in pre-defined response codes. The ChatClient looks at the response code and decides on how to 
+    deal with the response code. 
+"""
+
+
 import asynchat
 import asyncore
 import socket
@@ -8,68 +30,96 @@ from response_handler import ResponseHandler
 import pdu_data
 
 
+"Each time the client uses the system, the ChatClient class is instantiated"
 class ChatClient(asynchat.async_chat):
-    __host = "127.0.0.1"    # IP
+    __host = "127.0.0.1"    # host IP
     __port = 12345          # port that server listens to
     __version = 1.0         # client protocol version
 
+    """constructor for ChatClient"""
     def __init__(self):
-        """constructor for the client object"""
 
+        # initializing async_chat
         asynchat.async_chat.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)      # creates new socket
-        self.set_terminator('\n')       # async chat calls found_terminator on receival of this terminator
+
+        # creates new socket
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # Setting up the terminator. So if the response stream ends with this terminator, found_terminator function is called
+        self.set_terminator('\n')
+
+        # Async_chat stores all incoming request streams in the buffer until the terminator has been received
         self.buffer = []
+
+        # Following attributes stores client specific data
         self.obj = {}
         self.username = ""
         self.chat_name = ""
         self.groupNames = []
 
-        # region while loop terminators
-        self.authentication_complete = False        # set to true when authentication is complete
-        self.create_group_resp_recv = False         # create group function called and value returned
+        """The following attributes are used as while loop terminators. The client sends a request to the server, but the 
+        response does not return to the same location where the request was sent. Whereas, it reaches found_terminator
+        when the response contains the terminator. In the mean while, a while loop is started where the request is sent, 
+        thus halting the execution of the code at that location. The while loop terminates only when the following 
+        attributes values are changed in the found_terminator function"""
+
+        # authentication_complete is set to true when authentication has been complete and response is received from the server
+        self.authentication_complete = False
+
+        # create_group_resp_recv is set to true when the servers 'create group' function returns a response back to the client
+        self.create_group_resp_recv = False
+
+        # groupNames_received is set to true when the client receives the group names from the server
         self.groupNames_received = False
-        self.ban_complete = False                   # whether the ban function has returned a value
-        self.ban_allowed = False                    # whether to ban or not
-        self.movedOut = False                       # whether move out of group function has returned a value
-        # end region while loop terminators
 
+        # ban_complete is set to true when the banning function has been called and a response has been received from the server
+        self.ban_complete = False
+
+        # ban_allowed is set to true when banning is valid and remains false if banning is invalid
+        self.ban_allowed = False
+
+        # move_out is set to true when the server removes the client from a group and the client receives a response from the server
+        self.moved_out = False
+
+    """Makes connection to the server based on host and port no"""
     def connect_to_server(self):
-        """Makes connection to the server based on host and port no"""
-
+        # Makes connection to the server given the host ip and the port no
         self.connect((ChatClient.__host, ChatClient.__port))
 
+    """Creates object of class PDURequest and serializes the object to a string. 
+    The string terminates with '\n' so that the servers found_terminator function would be called on invoking push"""
     def sendPDURequest(self, command, parameters, channel, payload):
-        """Creates object of class PDURequest and serializes the object to a string. 
-        The string terminates with '\n' so that the servers found_terminator function would be called on invoking push
-        :param command -> command that the user wants to fire
-        :param parameters -> parameters required to fire the command
-        :param channel -> channel in which the data is passed
-        :param payload -> extra data that needs to be passed for the command
-        """
-
         str_send = PDURequest(self.__version, command, parameters, channel, payload).createRequestStr()
         self.push(str_send)
 
+    """Collects all incoming data from the server until the terminator string has been received"""
     def collect_incoming_data(self, data):
-        """Used by async chat when client receives a response from the server"""
-
         self.buffer.append(data)
 
+    """Called when response has the value set in set_terminator in the clients constructor"""
     def found_terminator(self):
-        """Called when response has the value set in set_terminator in the clients constructor"""
-
+        # Joins all the values in the buffer as a single string
         resp_str = ''.join(self.buffer)
+
+        # Clearing the buffer array to get ready for the next response
         self.buffer = []
 
-        resp_obj = json.loads(resp_str)         # deserialization | converts response string back to JSON object
+        # Converts the serialized message received from the server back to a JSON object
+        resp_obj = json.loads(resp_str)
 
-        if resp_obj["response_code"] == "110":              # Authenticated successfully
+        """The following block of if-else loops are for handling different response codes separately. 
+        The response from the server can be a positive or a negative response. Thus the actions to be performed by the 
+        client after receiving a response depends to the response code"""
+
+        # When has successfully been authenticated into the system
+        if resp_obj["response_code"] == "110":
             self.obj["authenticated"] = True
             self.authentication_complete = True
 
-        elif resp_obj["response_code"] == "130":            # List of groups received
+        # When the list of groups have been returned from the server
+        elif resp_obj["response_code"] == "130":
             if self.username == resp_obj["parameters"]["username"]:
+                # The group names are extracted from the payload
                 self.groupNames = resp_obj["payload"]
 
                 self.processResponse(resp_obj)
@@ -77,88 +127,103 @@ class ChatClient(asynchat.async_chat):
                 self.obj["group_fetch_success"] = True
                 self.groupNames_received = True
 
-        elif resp_obj["response_code"] == "140":            # Message received
+        # When the client receives a message from the server
+        elif resp_obj["response_code"] == "140":
+            # The message is extracted from the payload
             chat = resp_obj["payload"]
 
-            if self.username == chat[1: len(self.username) + 1]:       # don't print on senders console
+            # Condition for not printing the message on the senders console
+            if self.username == chat[1: len(self.username) + 1]:
                 return
             else:
                 self.processResponse(resp_obj)
-                print("-> "),       # comma added to allow next print to be on the same line
+                # comma added to allow next print to be on the same line
+                print("-> "),
 
-        elif resp_obj["response_code"] == "170":            # Group created successfully
+        # When group has been created successfully
+        elif resp_obj["response_code"] == "170":
             self.obj["groupCreated"] = True
             self.create_group_resp_recv = True
 
-        elif resp_obj["response_code"] == "180":            # Group joined successfully
+        # When the client successfully joins a group
+        elif resp_obj["response_code"] == "180":
             if self.username == resp_obj["parameters"]["username"]:
                 self.chat_name = resp_obj["parameters"]["chat_name"]
             self.processResponse(resp_obj)
 
-        elif resp_obj["response_code"] == "190":            # Left group successfully
+        # When a client successfully leaves a group
+        elif resp_obj["response_code"] == "190":
             self.processResponse(resp_obj)
             if resp_obj["parameters"]["username"] == self.username:
-                self.movedOut = True
+                self.moved_out = True
 
-        elif resp_obj["response_code"] == "191":            # Banned user successfully
+        # When banning a user was successful
+        elif resp_obj["response_code"] == "191":
             if resp_obj["parameters"]["banned_user"] == self.username:
                 self.chat_name = ""
             self.processResponse(resp_obj)
 
-        elif resp_obj["response_code"] == "192":            # Kicked user successfully
+        # When kicking a user was successful
+        elif resp_obj["response_code"] == "192":
             if resp_obj["parameters"]["kicked_user"] == self.username:
                 self.chat_name = ""
             self.processResponse(resp_obj)
 
-        elif resp_obj["response_code"] == "200":            # Authentication failed
+        # When authentication to the system failed
+        elif resp_obj["response_code"] == "200":
             self.obj["authenticated"] = False
             self.authentication_complete = True
 
-        elif resp_obj["response_code"] == "230":            # Group creation failed
+        # When group could not be created successfully
+        elif resp_obj["response_code"] == "230":
             self.obj["groupCreated"] = False
             self.create_group_resp_recv = True
 
-        elif resp_obj["response_code"] == "240":            # Group joining failed
+        # When joining group action failed
+        elif resp_obj["response_code"] == "240":
             if self.username == resp_obj["parameters"]["username"]:
                 self.processResponse(resp_obj)
 
                 self.obj["group_fetch_success"] = False
                 self.groupNames_received = True
 
-        elif resp_obj["response_code"] == "250":            # Ban user failed
+        # When banning user action failed
+        elif resp_obj["response_code"] == "250":
             if resp_obj["parameters"]["username"] == self.username:
                 self.processResponse(resp_obj)
 
-        elif resp_obj["response_code"] == "260":            # Kick user failed
+        # When kicking user action failed
+        elif resp_obj["response_code"] == "260":
             if resp_obj["parameters"]["username"] == self.username:
                 self.processResponse(resp_obj)
 
-        elif resp_obj["response_code"] == "330":            # Incompatible version
+        # When server and client versions are incompatible
+        elif resp_obj["response_code"] == "330":
             self.processResponse(resp_obj)
             self.handle_close()
 
-        else:                                               # All other response codes
+        # For all other response codes
+        else:
             self.processResponse(resp_obj)
 
+    """Processes the response from the server i.e. appropriate function is called on the ResponseHandler class based on the response code"""
     def processResponse(self, resp_obj):
-        """Processes the response from the server i.e. appropriate function is called on the ResponseHandler class based
-        on the response code"""
-
         resp_code = resp_obj["response_code"]
+        # Setting up PDUData object to be used in response handling
         obj = pdu_data.PDUData()
         obj.payload = resp_obj["payload"]
 
         resh_obj = ResponseHandler(obj)
+        # Calls the associated function for the received response code
         return resh_obj.runResponseCodeAction(resp_code)
 
+    """Async chat calls this if the client has thrown an unhandled error or if the client logs out from the system"""
     def handle_close(self):
-        """Async chat calls this if the client has thrown an unhandled error or if the client logs out from the system"""
-
         self.close()
         print "Your connection has been terminated"
 
+    """This function is responsible for clients authentication, creation or joining groups"""
     def initiateDialog(self):
-        """This function is responsible for clients authentication, creation or joining groups"""
 
         print "Welcome to our CSP system. To continue, select one of the following"
 
@@ -168,11 +233,18 @@ class ChatClient(asynchat.async_chat):
             print "2 -> Sign up"
             user_input = raw_input("-> ")
 
+            # For login
             if user_input == "1":
                 self.authentication_complete = False
+
+                # Fetching user input for username and password
                 username = raw_input("username-> ")
                 password = raw_input("password-> ")
+
+                # Setting up parameters
                 creds = {"username": username, "password": password, "chat_name": ""}
+
+                # Send request to perform authentication
                 self.sendPDURequest("AUTH", creds, "CC", "")
 
                 # Wait for server response. Value of self.authentication_complete set to true in found_terminator
@@ -188,11 +260,18 @@ class ChatClient(asynchat.async_chat):
                     print "Either your username or password is incorrect"
                     continue
 
+            # For creating new account
             elif user_input == "2":
                 self.authentication_complete = False
+
+                # Fetching user input for username and password
                 username = raw_input("choose username-> ")
                 password = raw_input("choose password-> ")
+
+                # Setting up parameters
                 creds = {"username": username, "password": password, "chat_name": ""}
+
+                # Send request to create new user account
                 self.sendPDURequest("NWUA", creds, "CC", "")
 
                 # Wait for server response. Value of self.authentication_complete set to true in found_terminator
@@ -211,14 +290,18 @@ class ChatClient(asynchat.async_chat):
                 print "Invalid input, try again."
                 continue
 
+    """Function responsible for fetching available groups or creating a new group"""
     def createOrFetchGroups(self):
-        """Function responsible for fetching available groups or creating a new group"""
         while True:
             print "1 -> Join available groups"
             print "2 -> Create new group"
             user_input = raw_input("-> ")
+
+            # Join existing group
             if user_input == "1":
                 para = {"username": self.username, "chat_name": ""}
+
+                # Send request to fetch existing groups
                 self.sendPDURequest("LIST", para, "CC", "")
 
                 # Wait for server response. Value of self.groupNames_received set to true in found_terminator
@@ -227,6 +310,8 @@ class ChatClient(asynchat.async_chat):
 
                 if self.obj["group_fetch_success"]:
                     self.joinGroup(self.username)
+
+                    # Resetting values
                     self.obj["group_fetch_success"] = False
                     self.groupNames_received = False
                     self.groupNames = []
@@ -234,6 +319,7 @@ class ChatClient(asynchat.async_chat):
                 else:
                     continue
 
+            # Create new group
             elif user_input == "2":
                 print "Enter Group name"
                 groupName = raw_input("-> ")
@@ -243,6 +329,8 @@ class ChatClient(asynchat.async_chat):
                     continue
 
                 para = {"username": self.username, "chat_name": groupName}
+
+                # Send request to create a new group
                 self.sendPDURequest("CHAT", para, "CC", "")
 
                 # Wait for server response. Value of self.create_group_resp_recv set to true in found_terminator
@@ -261,14 +349,13 @@ class ChatClient(asynchat.async_chat):
                 print "Invalid input"
                 continue
 
+    """Function responsible for joining a selected group"""
     def joinGroup(self, username):
-        """Function responsible for joining a selected group
-        :param username -> username of the client"""
-
         while True:
             user_input = raw_input("-> ")
             chatFound = False
 
+            # Displaying the group names as a list
             for i in range(0, len(self.groupNames)):
                 try:
                     number = int(user_input)
@@ -277,21 +364,26 @@ class ChatClient(asynchat.async_chat):
                     break
                 else:
                     if number == i + 1:
+                        # Setting up parameters
                         para = {"username": username, "chat_name": self.groupNames[int(user_input) - 1]}
+
+                        # Send request to join a group
                         self.sendPDURequest("JOIN", para, "CC", "")
                         chatFound = True
                     elif i == len(self.groupNames)-1 and not chatFound:
                         print "Please enter a valid input"
                         continue
 
-            self.groupNames = []        # reset for next fetch
+            # Resetting for next fetch
+            self.groupNames = []
+
             if not chatFound:
                 continue
             else:
                 break
 
+    """Display list of commands that can be fired by the client. Function is called when client types in -help"""
     def displayOptions(self):
-        """Display list of commands that can be fired by the client. Function is called when client types in -help"""
 
         if self.username == "":
             print "Log in first"
@@ -305,41 +397,48 @@ class ChatClient(asynchat.async_chat):
             if self.chat_name != "":
                 print "Exit Group   : -moveout"
 
-            # if client.isAdmin:      # also check if admin of current group
             print "Kick User    : -kick username"
             print "Ban User     : -ban username"
 
+    """Function is responsible for displaying the chat console"""
     def chatConsole(self):
-        """Function is responsible for displaying the chat console"""
-
         while True:
             msg = raw_input('-> ')
-            if msg == "-logout":            # client wants to logout from the system
+
+            # When client wants to logout from the system
+            if msg == "-logout":
                 self.handle_close()
                 break
 
-            elif msg == "-help":            # client wants to see the list of commands that can be fired
+            # When client wants to see the list of commands that can be fired
+            elif msg == "-help":
                 self.displayOptions()
 
-            elif msg == "-moveout":         # client wants to leave the group
+            # When # client wants to leave the group
+            elif msg == "-moveout":
+                # Send leave group request
                 self.sendPDURequest("LEVE", {"username": self.username, "chat_name": self.chat_name}, "CC", "")
 
-                while not self.movedOut:
+                while not self.moved_out:
                     pass
 
-                self.movedOut = False
-                print ""
+                # Resetting values
+                self.moved_out = False
                 self.groupNames = []
+
+                print ""
                 self.createOrFetchGroups()
 
-            elif msg == "-join":            # client wants to join a new group
+            # When client wants to join a new group
+            elif msg == "-join":
                 if self.chat_name != "":
                     print "First run -moveout"
                 else:
                     self.groupNames = []
                     self.createOrFetchGroups()
 
-            elif "-kick" in msg:            # admin client who wants to kick a user from the chat (user can rejoin)
+            # When an admin client who wants to kick a user from the chat (user can rejoin)
+            elif "-kick" in msg:
                 if self.chat_name == "":
                     print "You are not part of a group right now. Join a group first"
                     continue
@@ -353,9 +452,12 @@ class ChatClient(asynchat.async_chat):
                     print "You cannot kick yourself"
                 else:
                     parameters = {"username": client.username, "chat_name": client.chat_name, "kicked_user": kick_user[0]}
+
+                    # Send kick request
                     self.sendPDURequest("KICK", parameters, "AC", "")
 
-            elif "-ban" in msg:             # admin client who wants to ban a user from the chat (user can't rejoin)
+            # When admin client who wants to ban a user from the chat (user can't rejoin)
+            elif "-ban" in msg:
                 if self.chat_name == "":
                     print "You are not part of a group right now. Join a group first"
                     continue
@@ -369,9 +471,12 @@ class ChatClient(asynchat.async_chat):
                     print "You cannot ban yourself"
                 else:
                     parameters = {"username": client.username, "chat_name": client.chat_name, "banned_user": banned[0]}
+
+                    # Send ban request
                     self.sendPDURequest("BANN", parameters, "AC", "")
 
-            else:                           # chats sent from the client
+            # All other chats sent by the client
+            else:
                 if self.chat_name == "":
                     print "You are not connected to any group. Try -join to join another group"
                     continue
@@ -379,11 +484,17 @@ class ChatClient(asynchat.async_chat):
                     continue
 
                 msg = "(" + self.username + ") " + msg
+
+                # Send message request
                 self.sendPDURequest("MSSG", {"username": self.username, "chat_name": self.chat_name}, "DC", msg)
 
+# Creating a new client
 client = ChatClient()
+
+# Connect to the server
 client.connect_to_server()
 
+# Start thread
 comm = threading.Thread(target=asyncore.loop)
 comm.daemon = True
 comm.start()
