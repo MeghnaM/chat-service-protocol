@@ -1,3 +1,16 @@
+"""
+CS 544 - Computer Networks
+5.30.2017
+Group 5: Chat Service Protocol
+File: pdu_request.py
+Members: Ted, Shivam, Meghna, Jeshuran
+
+File summary:
+    The purpose of this file is to create a new request object. The request object is created when the client wants to 
+    fire a command and wants the server to process the command. The class has a function to convert the object into 
+    an string for the request to be sent towards the server.
+"""
+
 import json
 
 """Requests from client are made into the PDURequest object"""
