@@ -6,15 +6,15 @@ File: response_handler.py
 Members: Ted, Shivam, Meghna, Jeshuran
 
 File summary:
-    The purpose of this file is to handle the responses coming from the server. The responses first reach the client file 
-    and control is passed to this response_handler file. The ResponseHandler class has the runResponseCodeAction function 
+    The purpose of this file is to handle the responses coming from the server. The responses first reach the client file
+    and control is passed to this response_handler file. The ResponseHandler class has the runResponseCodeAction function
     which calls the required function based on the response code received from the server.
 
-    Almost all of the functions defined in this class just involves printing the payload that has been returned back 
+    Almost all of the functions defined in this class just involves printing the payload that has been returned back
     from the server
 """
 
-"""ResponseHandler class is used by the client to handle all the incoming responses from the server. 
+"""ResponseHandler class is used by the client to handle all the incoming responses from the server.
 Almost all functions of ResponseHandler would be printing something to notify the client"""
 class ResponseHandler:
 
@@ -22,6 +22,7 @@ class ResponseHandler:
     def __init__(self, obj):
         self.obj = obj
 
+    ## STATEFUL - calls a different function to handle each request being sent from a different state ##
     """Calls the associated function of the response code received"""
     def runResponseCodeAction(self, resp_code):
         if resp_code == "100":

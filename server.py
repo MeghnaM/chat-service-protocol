@@ -7,17 +7,17 @@ Members: Ted, Shivam, Meghna, Jeshuran
 
 File summary:
     The purpose of the file is to create a working server which listens at a specified port. The client will have to
-    connect to the server using the server IP and the port that the server is listening to. The server receives the 
-    commands from the client, and it is the responsibility of the server to decide what to do with the request. 
-    
-    Async_chat has been used to detect the terminating character/s in the request stream. Once the server receives the 
-    terminating character/s, the found_terminator function gets called after which further request processing can be 
+    connect to the server using the server IP and the port that the server is listening to. The server receives the
+    commands from the client, and it is the responsibility of the server to decide what to do with the request.
+
+    Async_chat has been used to detect the terminating character/s in the request stream. Once the server receives the
+    terminating character/s, the found_terminator function gets called after which further request processing can be
     performed. Additionally, async_chat keeps updating the chat_room object with the clients IP address as well as the
     port number whenever a new client connects with the server.
-    
-    The client_map object is critical for the proper functioning of the protocol. The chat_room object is updated by 
-    async chat. It has all the IP addresses and port numbers of all the clients that are connected to the server. Our 
-    code makes use of the chat_room object to update the client_map. The client_map is essentially a map between 
+
+    The client_map object is critical for the proper functioning of the protocol. The chat_room object is updated by
+    async chat. It has all the IP addresses and port numbers of all the clients that are connected to the server. Our
+    code makes use of the chat_room object to update the client_map. The client_map is essentially a map between
     clients username and the socket details (i.e. the clients IP and port no) in the chat_room.
 
 """
@@ -55,6 +55,7 @@ class ChatHandler(asynchat.async_chat):
     def collect_incoming_data(self, data):
         self.buffer.append(data)
 
+    ## STATEFUL - calls the processRequest function ##
     """This function is called by async_chat when the terminator, set by set_terminator, is found in the request stream"""
     def found_terminator(self):
         # Joins all the values in the buffer as a single string

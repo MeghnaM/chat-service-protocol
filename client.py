@@ -6,17 +6,17 @@ File: client.py
 Members: Ted, Shivam, Meghna, Jeshuran
 
 File summary:
-    The purpose of this file is to create new clients and manage the states that the client is in. The client makes use 
+    The purpose of this file is to create new clients and manage the states that the client is in. The client makes use
     of async chat to send and receive data to and from the server. The client needs to know the IP of the server and the
     port that the server is listening on to make the connection.
-    
-    Async_chat has been used to detect the terminating character/s in the request stream. Once the server receives the 
-    terminating character/s, the found_terminator function gets called after which further request processing can be 
+
+    Async_chat has been used to detect the terminating character/s in the request stream. Once the server receives the
+    terminating character/s, the found_terminator function gets called after which further request processing can be
     performed.
-    
-    The ChatClient is primarily responsible for sending requests to the server and receiving responses from the server. 
-    The server responds in pre-defined response codes. The ChatClient looks at the response code and decides on how to 
-    deal with the response code. 
+
+    The ChatClient is primarily responsible for sending requests to the server and receiving responses from the server.
+    The server responds in pre-defined response codes. The ChatClient looks at the response code and decides on how to
+    deal with the response code.
 """
 
 
@@ -57,10 +57,10 @@ class ChatClient(asynchat.async_chat):
         self.chat_name = ""
         self.groupNames = []
 
-        """The following attributes are used as while loop terminators. The client sends a request to the server, but the 
+        """The following attributes are used as while loop terminators. The client sends a request to the server, but the
         response does not return to the same location where the request was sent. Whereas, it reaches found_terminator
-        when the response contains the terminator. In the mean while, a while loop is started where the request is sent, 
-        thus halting the execution of the code at that location. The while loop terminates only when the following 
+        when the response contains the terminator. In the mean while, a while loop is started where the request is sent,
+        thus halting the execution of the code at that location. The while loop terminates only when the following
         attributes values are changed in the found_terminator function"""
 
         # authentication_complete is set to true when authentication has been complete and response is received from the server
@@ -86,7 +86,7 @@ class ChatClient(asynchat.async_chat):
         # Makes connection to the server given the host ip and the port no
         self.connect((ChatClient.__host, ChatClient.__port))
 
-    """Creates object of class PDURequest and serializes the object to a string. 
+    """Creates object of class PDURequest and serializes the object to a string.
     The string terminates with '\n' so that the servers found_terminator function would be called on invoking push"""
     def sendPDURequest(self, command, parameters, channel, payload):
         str_send = PDURequest(self.__version, command, parameters, channel, payload).createRequestStr()
@@ -96,6 +96,7 @@ class ChatClient(asynchat.async_chat):
     def collect_incoming_data(self, data):
         self.buffer.append(data)
 
+    ## STATEFUL - invocation of the processResponse() method ##
     """Called when response has the value set in set_terminator in the clients constructor"""
     def found_terminator(self):
         # Joins all the values in the buffer as a single string
@@ -107,8 +108,8 @@ class ChatClient(asynchat.async_chat):
         # Converts the serialized message received from the server back to a JSON object
         resp_obj = json.loads(resp_str)
 
-        """The following block of if-else loops are for handling different response codes separately. 
-        The response from the server can be a positive or a negative response. Thus the actions to be performed by the 
+        """The following block of if-else loops are for handling different response codes separately.
+        The response from the server can be a positive or a negative response. Thus the actions to be performed by the
         client after receiving a response depends to the response code"""
 
         # When has successfully been authenticated into the system
@@ -206,6 +207,7 @@ class ChatClient(asynchat.async_chat):
         else:
             self.processResponse(resp_obj)
 
+    ## STATEFUL - calls the ResponseHandler to parse PDUs ##
     """Processes the response from the server i.e. appropriate function is called on the ResponseHandler class based on the response code"""
     def processResponse(self, resp_obj):
         resp_code = resp_obj["response_code"]
