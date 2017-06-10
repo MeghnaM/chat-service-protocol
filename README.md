@@ -77,5 +77,5 @@
 	2) src (Source Code folder containing the source code and the executable files)
 	3) Group5-Video.mov
 	4) Requirements_Team_5.pdf
-	5) README.txt
+	5) README.md
 
