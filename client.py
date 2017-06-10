@@ -29,7 +29,7 @@ from pdu_request import PDURequest
 from response_handler import ResponseHandler
 import pdu_data
 
-
+## CLIENT SPECIFICATION - hardcoding the port that the server is listening on ##
 "Each time the client uses the system, the ChatClient class is instantiated"
 class ChatClient(asynchat.async_chat):
     __host = "127.0.0.1"    # host IP

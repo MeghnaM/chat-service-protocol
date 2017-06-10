@@ -28,7 +28,7 @@ import socket
 import json
 import request_handler as reqh
 
-
+## CONCURRENT - the chat_room map accepts and stores multiple client objects ##
 chat_room = {}          # chat_room is being updated by async chat
 client_map = {          # client_map is being updated by the server code
     "clients": []       # "clients" stores a list of individual clients that are authenticated by the server
@@ -110,7 +110,7 @@ class ChatHandler(asynchat.async_chat):
         # Clearing the buffer array to get ready for the next request
         self.buffer = []
 
-
+## SERVICE - hardcoding the port that will serve as the endpoint on the server ##
 """ChatServer is the class that sets up the server and is responsible for listening to the incoming requests from the client"""
 class ChatServer(asyncore.dispatcher):
     __host = "127.0.0.1"                    # IP of the server
@@ -135,6 +135,7 @@ class ChatServer(asyncore.dispatcher):
     def getVersion(self):
         return self.__version
 
+    ## CONCURRENT - the server accepts multiple connections and stores each new client's details in the client_map ##
     """Asyncore calls this function when a client makes a connection with the server"""
     def handle_accept(self):
         # pair is a tuple of the client socket and port number
