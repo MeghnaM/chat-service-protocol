@@ -66,6 +66,7 @@ class ResponseHandler:
     def kickFailedAction(self):
         print "****", self.obj.payload, "****"
 
+    """Prints payload"""
     def acknowledgeConnectionAction(self, data):
         print self.obj.payload
 
@@ -76,9 +77,11 @@ class ResponseHandler:
         for i in range(0, len(chatList)):
             print i+1, ":", chatList[i]
 
+    """Prints payload"""
     def receiveQueuedMessagesAction(self):
         print self.obj.payload
 
+    """Prints payload"""
     def groupCreationFailedAction(self):
         # print self.obj.payload
         pass
