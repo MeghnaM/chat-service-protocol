@@ -66,4 +66,3 @@ The zip file contains the following files:
 	3) Group5-Video.mov
 	4) Requirements_Team_5.pdf
 	5) README.txt
-
