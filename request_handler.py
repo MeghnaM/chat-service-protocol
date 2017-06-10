@@ -37,36 +37,16 @@ class RequestHandler:
         # Following if-else loops checks the command received and perform the associated function
         if command == "REDY":
             return self.readyAction()
-        elif command == "NICK":
-            return self.nickAction()
         elif command == "JOIN":
             return self.joinAction(handler, client_map)
-        elif command == "PART":
-            return self.partAction()
         elif command == "MSSG":
             return self.mssgAction()
         elif command == "KICK":
             return self.kickAction(client_map)
         elif command == "BANN":
             return self.banAction(client_map)
-        elif command == "BLAK":
-            return self.blackAction()
-        elif command == "ELVT":
-            return self.elevateAction()
-        elif command == "DROP":
-            return self.dropAction()
         elif command == "LIST":
             return self.listAction()
-        elif command == "PMSG":
-            return self.privateMessageAction()
-        elif command == "PRVM":
-            return self.endPrivateMessageAction()
-        elif command == "PMSS":
-            return self.sendPrivateMessageAction()
-        elif command == "QUIT":
-            return self.quitAction()
-        elif command == "KEEP":
-            return self.keepAliveAction()
         elif command == "AUTH":
             return self.loginAuthentication(handler, client_map)
         elif command == "NWUA":
@@ -177,10 +157,6 @@ class RequestHandler:
         # Return server is ready response
         return PDUResponse("100", {}, "CC", "Ready").createResponseStr()
 
-    # nickAction sends a NICK PDU to the server
-    def nickAction(self):
-        pass
-
     """Function responsible for allowing client to join a group"""
     def joinAction(self, handler, client_map):
         # Fetching group details data from list file
@@ -220,12 +196,6 @@ class RequestHandler:
             parameters = {"username": self.obj["username"], "chat_name": self.obj["chat_name"]}
             # Creating and returning group joining failed response
             return PDUResponse("240", parameters, "CC", "You are banned from joining this group").createResponseStr()
-
-    def partAction(self):
-        # parameters nick and chatname
-        # server removes nick from chat_Room list
-        # client closes chatroom window
-        pass
 
     """Receive message from client and creating response to send to all other clients in the group"""
     def mssgAction(self):
@@ -340,19 +310,6 @@ class RequestHandler:
             return PDUResponse("250", {"username": self.obj["username"]}, "CC", "You are not the admin of this group")\
                 .createResponseStr()
 
-    def blackAction(self):
-        pass
-
-    def elevateAction(self):
-        # parameters nick and chatname
-        # server adds nick to elevated user list for the chat room object
-        pass
-
-    def dropAction(self):
-        # parameters nick and chatname
-        # server removes nick from elevated user list for the chat room object
-        pass
-
     """Returns list of existing groups available in the server"""
     def listAction(self):
         # Getting contents of group details file
@@ -370,28 +327,6 @@ class RequestHandler:
         else:
             # Creating and returning failed group fetch response
             return PDUResponse("240", {"username": self.obj["username"]}, "", "There are currently no groups").createResponseStr()
-
-    def privateMessageAction(self):
-        pass
-
-    def endPrivateMessageAction(self):
-        pass
-
-    def sendPrivateMessageAction(self):
-        pass
-
-    def mailAction(self):
-        # parameters - nick
-        # server responds with asciii text payload of queued messages
-        pass
-
-    def quitAction(self):
-        # paremters nick
-        # server disconnect
-        pass
-
-    def keepAliveAction(self):
-        pass
 
     """Creates new group and maintains the groups in a file"""
     def createNewChat(self, handler, client_map):
@@ -456,9 +391,6 @@ class RequestHandler:
 
         # Creating and returning group created successfully response
         return PDUResponse("170", {}, "", "").createResponseStr()
-
-    def getList(self):
-        pass
 
     """Function responsible for removing user from chat room"""
     def leaveChat(self, handler, client_map):
